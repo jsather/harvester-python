@@ -43,7 +43,7 @@ def ddpg_imports():
     import ddpg.noise as noise 
     import policy
 
-def detector_PR(output_dir, granularity=0.05, max_eval=1000):
+def detector_PR(output_dir, granularity=0.05, max_eval=None):
     """ Runs detector on test set, varying thresholds to create 
         precision-recall curve, and saves results.
     """
@@ -383,9 +383,11 @@ class DetectorEvaluator(object):
     def evaluate(self, image_path, label_path, thresholds):
         """ Evaluates detector on given image. """
         ground_truth = self.get_labels(image_path, label_path)
-        predicted = self.detector.detect(image_path)
+        image = cv2.imread(image_path)
+        predicted = self.detector.detect(image)
         self.update_statistics(predicted, ground_truth, thresholds) # update this to handle more classes
-
+        
+        pdb.set_trace()
         if self.display:
             image = cv2.imread(image_path)
             self.draw_result(image, predicted, ground_truth) # update this!
@@ -496,10 +498,12 @@ class DetectorEvaluator(object):
             pickle.dump(stats, f)
 
         pr = {'precision': stats.pop('precisions', None), 
-            'recall': stats.pop('recalls', None)}
+            'recall': stats.pop('recalls', None),
+            'thresholds': stats.pop('thresholds', None)}
+        stats.pop('confusion') 
         
         for t, thresh in enumerate(self.thresholds):
-            thresh_stats = {key:val[t] for (key, val) in stats}
+            thresh_stats = {key:val[t] for (key, val) in stats.iteritems()}
             thresh_csv = os.path.join(self.summary_dir, 
                 'detector_stats' + str(thresh) + '.csv')
             print('Saving results for threshold: ' + str(thresh) + ' to csv ' + 
@@ -515,8 +519,9 @@ class DetectorEvaluator(object):
             ground truth values for image.
         """
         # Predicted bbox classification
+        pdb.set_trace()
         for t, thresh in enumerate(thresholds):
-            valid_pds = [pd for pd in predicted if pd >= thresh]
+            valid_pds = [pd for pd in predicted if pd[1] >= thresh]
             for pd in valid_pds:
                 tp = False # Assume false positive until proven otherwise
                 for g in ground_truth:
