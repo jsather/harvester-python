@@ -4,7 +4,7 @@
     Last updated: 8/28/2018
 """
 import numpy as np
-import image_config as image_cfg 
+import config as image_cfg 
 
 def show_annotated_feed():
     """ Runs script to show annotated feed. Returns PID of process."""

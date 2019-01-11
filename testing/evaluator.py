@@ -27,22 +27,22 @@ import utils
 import pdb 
 
 # TODO: 
-#    1) Debug detector tests
+# x  1) Debug detector tests
 # x  2) Finish ddpg tests
+#    2.5) Add analysis to ddpg tests: 
+#         - fixation: positions to 3d coordinates 
+#                     from there, can plot sequential positions on 3d plot (path) and visually determine domains of attraction?
+#                                 or can run mean shift or some algorithm to find areas where tend to focus... look into this. dbscan or meanshift - read paper and watch vid
+#                                 bottom line is need to find boundaries of domains of attraction, then classify pts as in regions or outside and calc avg rewards
+#         - global exploration: positions to 3d coordinates
+#                               okay, I think it is unlikely that learned pathways nor do I think that they would likely be detected. 
+#                               could still try dbscan on positions and directions. could show pathways or downward patterns. for this one, hbdscan might be better... look at both
+#    2.75) Make scripts to do clustering for fixation and global exploration
 #    3) Debug ddpg tests
-#    4) Run detector tests
+# x  4) Run detector tests
 #    5) Run ddpg tests 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def ddpg_imports():
-    """ Imports modules specifically for the ddpg. """
-    import agent.agent_ros as agent_ros
-    import agent.config as agent_cfg
-    import ddpg.networks as networks
-    import ddpg.config as ddpg_cfg
-    import ddpg.noise as noise 
-    import policy
-
 def detector_PR(output_dir, granularity=0.05, max_eval=None):
     """ Runs detector on test set, varying thresholds to create 
         precision-recall curve, and saves results.
@@ -70,6 +70,13 @@ def detector_performance(output_dir):
 
 def ddpg_baseline_compare(output_dir, weights_file, results_file):
     """ Runs ddpg baseline test and saves results. """
+    import agent.agent_ros as agent_ros
+    import agent.config as agent_cfg
+    import ddpg.networks as networks
+    import ddpg.config as ddpg_cfg
+    import ddpg.noise as noise 
+    import policy
+
     config = tf.ConfigProto(**ddpg_cfg.tf_cfg)
     config.gpu_options.allow_growth = True 
 
@@ -95,7 +102,7 @@ def ddpg_baseline_compare(output_dir, weights_file, results_file):
             OU_noise,
             embedding=embedding_network)
         
-        agent = agent_ros.HemiAgentROS(headless=True, feed=False, detector=True)
+        agent = agent_ros.HemiAgentROS(headless=False, feed=False, detector=True)
         lut_info = {'thetas': agent.lut_thetas, 'phis': agent.lut_phis, 
             'mask': agent.lut_mask}
         
@@ -116,7 +123,7 @@ def ddpg_baseline_compare(output_dir, weights_file, results_file):
         evaluator = AgentEvaluator(policies=policies, 
             output_dir=output_dir, agent=agent, session=session,
             results_file=results_file, 
-            episode_length=100, num_episodes=100,
+            episode_length=100, num_episodes=100, # 100, 100
             test_name='baseline comparison')
         evaluator.compare_policies()
         print('Comparison complete. Terminating program.')
@@ -130,6 +137,13 @@ def ddpg_canopy_compare(output_dir, weights_file, results_file):
         interesting.
         NOTE: Requires premade plant models specified as model_mu#.rsdf
     """
+    import agent.agent_ros as agent_ros
+    import agent.config as agent_cfg
+    import ddpg.networks as networks
+    import ddpg.config as ddpg_cfg
+    import ddpg.noise as noise 
+    import policy
+
     config = tf.ConfigProto(**ddpg_cfg.tf_cfg)
     config.gpu_options.allow_growth = True 
 
@@ -179,6 +193,13 @@ def ddpg_fixation_analysis(output_dir, weights_file, results_file):
     """ Run ddpg policy on different plants and log special data for 
         analyzing fixation behavior. Save plant models!!
     """
+    import agent.agent_ros as agent_ros
+    import agent.config as agent_cfg
+    import ddpg.networks as networks
+    import ddpg.config as ddpg_cfg
+    import ddpg.noise as noise 
+    import policy
+
     config = tf.ConfigProto(**ddpg_cfg.tf_cfg)
     config.gpu_options.allow_growth = True 
 
@@ -239,6 +260,13 @@ def ddpg_global_exploration(output_dir, weights_file, results_file):
         analyzing global exploration patterns. Note: Also capture video to see
         if can find local patterns.
     """
+    import agent.agent_ros as agent_ros
+    import agent.config as agent_cfg
+    import ddpg.networks as networks
+    import ddpg.config as ddpg_cfg
+    import ddpg.noise as noise 
+    import policy
+    
     config = tf.ConfigProto(**ddpg_cfg.tf_cfg)
     config.gpu_options.allow_growth = True 
 
@@ -828,25 +856,21 @@ def main(args_dict):
         detector_performance(output_dir=args_dict['output_dir'])
     elif args_dict['test'] == 'baseline':
         print('Running ddpg baseline comparison.')
-        ddpg_imports()
         ddpg_baseline_compare(output_dir=args_dict['output_dir'], 
             weights_file=args_dict['weights_file'], 
             results_file=args_dict['results_file'])
     elif args_dict['test'] == 'canopy':
         print('Running ddpg canopy comparison.')
-        ddpg_imports()
         ddpg_canopy_compare(output_dir=args_dict['output_dir'], 
             weights_file=args_dict['weights_file'], 
             results_file=args_dict['results_file'])
     elif args_dict['test'] == 'fixation':
         print('Running ddpg fixation analysis.')
-        ddpg_imports()
         ddpg_fixation_analysis(output_dir=args_dict['output_dir'], 
             weights_file=args_dict['weights_file'], 
             results_file=args_dict['results_file'])
     elif args_dict['test'] == 'global' or args_dict['test'] == 'local':
         print('Running ddpg global/local exploration analysis.')
-        ddpg_imports()
         ddpg_global_exploration(output_dir=args_dict['output_dir'], 
             weights_file=args_dict['weights_file'], 
             results_file=args_dict['results_file'])
@@ -878,3 +902,5 @@ if __name__ == '__main__':
     if args_dict['weights_file'] == '':
         args_dict['weights_file'] = utils.get_latest_weights(args_dict['output_dir'])
     main(args_dict)   
+
+    # python evaluator.py --test 'baseline' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'

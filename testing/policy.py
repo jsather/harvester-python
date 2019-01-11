@@ -395,8 +395,8 @@ class Custom2(Policy):
             x_frac = (best_bb[2][1] - self.im_ctr[0]) / self.im_ctr[0]
             y_frac = (best_bb[2][0] - self.im_ctr[1]) / self.im_ctr[1]
 
+            theta_inc = y_frac * self.action_bound[0]
             phi_inc = x_frac * self.action_bound[1]
-            theta_inc = y_frac * self.action_bound[2]
         elif not self.crossed_thresh and j[1] < self.phi_thresh: 
             # down + random theta
             theta_inc = self.action_bound[0] * (2*random.random() - 1.0)
