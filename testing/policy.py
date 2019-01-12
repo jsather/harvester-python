@@ -541,7 +541,7 @@ class Hybrid(Policy):
             phi_inc = self.action_bound[1]
         else: # ddpg
             self.crossed_thresh = True
-            a_array = self._ddpg_action(o, j)
+            a_array = self.ddpg_action(o, j)
             theta_inc = a_array[0][0]
             phi_inc = a_array[0][1]
 

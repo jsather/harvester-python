@@ -102,7 +102,7 @@ def ddpg_baseline_compare(output_dir, weights_file, results_file):
             OU_noise,
             embedding=embedding_network)
         
-        agent = agent_ros.HemiAgentROS(headless=False, feed=False, detector=True)
+        agent = agent_ros.HemiAgentROS(headless=True, feed=False, detector=True)
         lut_info = {'thetas': agent.lut_thetas, 'phis': agent.lut_phis, 
             'mask': agent.lut_mask}
         
@@ -119,7 +119,7 @@ def ddpg_baseline_compare(output_dir, weights_file, results_file):
             weights_file=weights_file, action_bound=action_bound, 
             lut_info=lut_info)
         
-        policies = [random1, random2, random3, custom1, custom2, ddpg, hybrid]
+        policies = [hybrid] #[random1, random2, random3, custom1, custom2, ddpg, hybrid]
         evaluator = AgentEvaluator(policies=policies, 
             output_dir=output_dir, agent=agent, session=session,
             results_file=results_file, 
@@ -904,3 +904,4 @@ if __name__ == '__main__':
     main(args_dict)   
 
     # python evaluator.py --test 'baseline' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
+    # python evaluator.py --test 'baseline' --results-file '/mnt/storage/testing/2019_01_11_05_26/test_results.pkl' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
