@@ -10,8 +10,8 @@ import numpy as np
 
 # Useful directories
 pwd = os.path.split(os.path.abspath(__file__))[0]
-catkin_ws = '/root/catkin_ws'
-storage = '/mnt/storage'
+catkin_ws = '/home/jonathon/catkin_ws' #'/root/catkin_ws'
+storage = '/tmp' #'/mnt/storage'
 
 # General
 model_name = 'j2s6s200'
@@ -70,7 +70,7 @@ harvester_ros_path = os.path.join(catkin_ws, 'src', 'harvester-ros')
 harvester_default_cfg = { 
     'harvester_robotName': 'harvester1',
     'kinova_robotName': model_name, 
-    'world_name': 'worlds/strawberry.world', 
+    'world_name': 'worlds/strawberry_camera.world', 
     'paused': True, 
     'gui': True, 
     'debug': False}

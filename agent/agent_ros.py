@@ -37,7 +37,11 @@ from dynamic_reconfigure.client import Client
 import agent_utils
 import config as agent_cfg
 from plant_ros import PlantROS  
-from image.image_ros import RewardROS
+
+try:
+    from image.image_ros import RewardROS
+except ImportError as e:
+    print('Unable to import RewardROS: ', e)
 
 import pdb
 
@@ -190,7 +194,7 @@ class AgentROS(object):
         self.moveit_robot = moveit_commander.RobotCommander()
         self.moveit_scene = moveit_commander.PlanningSceneInterface()
         self.moveit_arm_group = moveit_commander.MoveGroupCommander('arm')
-        self.moveit_gripper_group = moveit_commander.MoveGroupCommander(
+        self.moveit_gripper_group = moveit_commander.MoveGrhttps://www.google.com/search?client=ubuntu&channel=fs&q=matplotlib+name+figure&ie=utf-8&oe=utf-8oupCommander(
             'gripper')
         self.moveit_ik = agent_utils.GetIK(group='arm', verbose=False)
         self.moveit_config = Client('/move_group/trajectory_execution')

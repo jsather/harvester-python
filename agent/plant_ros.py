@@ -50,7 +50,7 @@ class PlantROS:
         return self.spawned 
     
     def new(self, x=0.0, y=0.0, remove=True, name=None, verbose=True,
-        write=True, plant_model_prefix='model'):
+        write=True, plant_model_prefix='model', sdf=None):
         """ Spawns a new plant in Gazebo environment. """
         if remove:
             self.remove()
@@ -62,15 +62,16 @@ class PlantROS:
             print("Sending message to spawn plant " + str(name) +
                 " at (x, y) = (" + str(x) + ", " + str(y) + ")... ", end="")
             sys.stdout.flush()
+        
+        if not sdf: 
+            # Generate random plant
+            # cmd = ['erb', 'model.rsdf', '>', 'model.sdf'] # Not working - gives no such file or directory @ rb_sysopen error
+            rsdf = plant_model_prefix + '.rsdf'
+            sdf = plant_model_prefix + '.sdf'
 
-        # Generate random plant
-        # cmd = ['erb', 'model.rsdf', '>', 'model.sdf'] # Not working - gives no such file or directory @ rb_sysopen error
-        rsdf = plant_model_prefix + '.rsdf'
-        sdf = plant_model_prefix + '.sdf'
-
-        cmd = 'erb ' + rsdf + ' > ' + sdf
-        # cmd = 'erb model.rsdf > model.sdf'
-        subprocess.Popen(cmd, shell=True, cwd=self.model_dir)
+            cmd = 'erb ' + rsdf + ' > ' + sdf
+            # cmd = 'erb model.rsdf > model.sdf'
+            subprocess.Popen(cmd, shell=True, cwd=self.model_dir)
         
         # Spawn plant 
         # cmd = ['rosrun', 'gazebo_ros', 'spawn_model', '-file', 'model.sdf', '-sdf',
