@@ -1,8 +1,8 @@
 """ evaluator.py contains methods to test both the ddpg policy and the static 
-    detector. This module is a work in progress.
+    detector. 
 
     Author: Jonathon Sather
-    Last updated: 12/24/2018
+    Last updated: 1/13/2019
 """
 import argparse 
 import csv
@@ -35,12 +35,18 @@ import pdb
 #                                 or can run mean shift or some algorithm to find areas where tend to focus... look into this. dbscan or meanshift - read paper and watch vid
 #                                 bottom line is need to find boundaries of domains of attraction, then classify pts as in regions or outside and calc avg rewards
 #         - global exploration: positions to 3d coordinates
-#                               okay, I think it is unlikely that learned pathways nor do I think that they would likely be detected. 
-#                               could still try dbscan on positions and directions. could show pathways or downward patterns. for this one, hbdscan might be better... look at both
+#                               what is the new idea? - just video, but keep coords just in case!
 #    2.75) Make scripts to do clustering for fixation and global exploration
 #    3) Debug ddpg tests
 # x  4) Run detector tests
 #    5) Run ddpg tests 
+#       TODO: 
+#       video for each baseline comparison
+#    x  canopy density at mu=35
+#    x  run fixation test
+#       analysis scripts for fixation test
+#       videos clips for global and local exploration
+#       put results from each test in report!
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def detector_PR(output_dir, granularity=0.05, max_eval=None):
@@ -119,7 +125,7 @@ def ddpg_baseline_compare(output_dir, weights_file, results_file):
             weights_file=weights_file, action_bound=action_bound, 
             lut_info=lut_info)
         
-        policies = [hybrid] #[random1, random2, random3, custom1, custom2, ddpg, hybrid]
+        policies = [random1, random2, random3, custom1, custom2, ddpg, hybrid]
         evaluator = AgentEvaluator(policies=policies, 
             output_dir=output_dir, agent=agent, session=session,
             results_file=results_file, 
@@ -136,6 +142,9 @@ def ddpg_canopy_compare(output_dir, weights_file, results_file):
         lengths, as well as other performance stats, in case anything 
         interesting.
         NOTE: Requires premade plant models specified as model_mu#.rsdf
+        BUG: Seems to be spawning first plant as previous model. 
+        Temporary fix is to run 101 plants and discard first when analyzing
+        data.
     """
     import agent.agent_ros as agent_ros
     import agent.config as agent_cfg
@@ -174,16 +183,22 @@ def ddpg_canopy_compare(output_dir, weights_file, results_file):
             weights_file=weights_file)
 
         policies = [ddpg]
-        plants = ['model_mu5', 'model_mu20', 'model_mu50']
+        plants = ['model_mu35'] #['model_mu5', 'model_mu20', 'model_mu50']
 
         for plant in plants:
+            print('Evaluating on plant: ' + plant)
             test = 'canopy comparision ' + plant
+    
+            if plant == 'model_mu50': # add delay for loading big plant
+                delay = 10
+            else:
+                delay = 0
+
             evaluator = AgentEvaluator(policies=policies, 
                 output_dir=output_dir, agent=agent, session=session,
-                results_file=results_file, 
-                episode_length=100, num_episodes=100,
-                plant_file=plant,
-                test_name=test)
+                results_file=results_file, episode_length=100, 
+                num_episodes=101, plant_file=plant, test_name=test, 
+                episode_delay=delay)
             evaluator.compare_policies()
 
         print('Comparison complete. Terminating program.')
@@ -193,6 +208,14 @@ def ddpg_fixation_analysis(output_dir, weights_file, results_file):
     """ Run ddpg policy on different plants and log special data for 
         analyzing fixation behavior. Save plant models!!
     """
+    # NOTE: Let's reconsider this test... I think once per episode
+    #       makes sense. Although I think that this may be harder to
+    #       measure than I expected. How do I eliminate fixations
+    #       from the starting location?? Maybe I can eliminate those?
+    #       Or at least it will be something to talk about...
+    #       Do I need to compare to random? What is the purpose in
+    #       this case? maybe I do not. Eh might as well include it just
+    #       in case...
     import agent.agent_ros as agent_ros
     import agent.config as agent_cfg
     import ddpg.networks as networks
@@ -233,24 +256,26 @@ def ddpg_fixation_analysis(output_dir, weights_file, results_file):
         ddpg = policy.DDPG(session=session, actor=actor_network, 
             weights_file=weights_file)
 
-        policies = [random1, ddpg]
+        policies = [ddpg] #[random1, ddpg]
         test = 'fixation analysis'
         
-        for plant in range(20):
+        for plant in range(500):
             evaluator = AgentEvaluator(policies=policies, 
                 output_dir=output_dir, agent=agent, session=session,
                 results_file=results_file, 
-                episode_length=100, num_episodes=10,
+                episode_length=100, num_episodes=1,  #100 10
                 test_name=test)
             
             # spawn new plant and copy to test directory
             evaluator.agent.plant.new()
+            time.sleep(15)
             src = os.path.join(evaluator.agent.plant.model_dir, 'model.sdf')
             dst = os.path.join(evaluator.summary_dir, 
                 'model' + str(plant) + '.sdf')
             shutil.copyfile(src, dst)
 
-            evaluator.compare_policies(save_j=True, save_rewards=True)
+            evaluator.compare_policies(save_j=True, save_rewards=True, 
+                random=False)
 
         print('Comparison complete. Terminating program.')
         os.kill(os.getpid(), signal.SIGTERM)
@@ -258,7 +283,7 @@ def ddpg_fixation_analysis(output_dir, weights_file, results_file):
 def ddpg_global_exploration(output_dir, weights_file, results_file):
     """ Run ddpg policy and log positions and actions at each timestep for
         analyzing global exploration patterns. Note: Also capture video to see
-        if can find local patterns.
+        if can find interesting patterns.
     """
     import agent.agent_ros as agent_ros
     import agent.config as agent_cfg
@@ -415,7 +440,6 @@ class DetectorEvaluator(object):
         predicted = self.detector.detect(image)
         self.update_statistics(predicted, ground_truth, thresholds) # update this to handle more classes
         
-        pdb.set_trace()
         if self.display:
             image = cv2.imread(image_path)
             self.draw_result(image, predicted, ground_truth) # update this!
@@ -584,12 +608,13 @@ class AgentEvaluator(object):
 
     def __init__(self, policies, output_dir, agent, results_file=None, 
         session=None, episode_length=100, num_episodes=100, plant_file=None,
-        test_name='test'):
+        test_name='test', episode_delay=0):
         """ Initialize evaluator object. 
             TODO: Add documentation for args!...
         """
         self.agent = agent
         self.policies = policies
+        self.episode_delay = episode_delay
         self.episode_length = episode_length
         self.num_episodes = num_episodes
         self.plant_file = plant_file
@@ -612,7 +637,7 @@ class AgentEvaluator(object):
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
     def compare_policies(self, save_rewards=False, save_o=False, 
-        save_j=False, save_a=False, random=False):
+        save_j=False, save_a=False, random=False, display=False):
         """ Runs policy evaluation on each policy in memberdata and saves
             results.
         """
@@ -623,9 +648,10 @@ class AgentEvaluator(object):
                     save_o=save_o, save_j=save_j, save_a=save_a,
                     random=random)
         print('Policy comparison complete.')
-
-        self.display_results(self.test_results, thresh=0)
-        self.display_results(self.test_results, thresh=4)           
+        
+        if display:
+            self.display_results(self.test_results, thresh=0)
+            self.display_results(self.test_results, thresh=4)           
 
     def display_results(self, results, thresh=0):
         """ Summarizes results stored in memberdata. """
@@ -726,15 +752,47 @@ class AgentEvaluator(object):
 
         for policy in policy_names:
             stats = self.test_results[policy]
+            # remove = []
 
-            for key, val in stats.iteritems():
-                if key[:3] == 'all':
-                    filename = os.path.join(self.summary_dir, 
-                        policy + key + '.csv')
-                    with open(filename, 'w', newline='') as csvfile:
-                        writer = csv.writer(csvfile)
-                        writer.writerows(val)
-                    stats.pop(key)
+            # for key, val in stats.iteritems(): # what am i actually iterating through here...
+            #     # TODO: Fix this and make it into useable form!! For at least r and j...
+            #     if key == 'all_j': # could def do this more elegantly...
+            #         filename = os.path.join(self.summary_dir, 
+            #             policy + key + '.csv')
+                    
+            #         pdb.set_trace()
+            #         positions = {'theta': [j[0] for j in val],
+            #             'phi': [j[1] for j in val]}
+            #         utils.save_dict_as_csv(positions, filename)
+            #         # with open(filename, 'w+') as csvfile:
+            #         #     writer = csv.writer(csvfile)
+            #         #     for pos in val:
+            #         #         writer.writerows(list(pos))
+            #         remove.append(key) 
+
+            #     elif key == 'all_rewards':
+            #         filename = os.path.join(self.summary_dir, 
+            #             policy + key + '.csv')
+            #         pdb.set_trace()
+            #         rewards = {'rewards': val}
+            #         utils.save_dict_as_csv(rewards, filename)
+            #         # with open(filename, 'w+') as csvfile:
+            #         #     writer = csv.writer(csvfile)
+            #         #     for reward in val:
+            #         #         writer.writerows([reward])
+            #         remove.append(key) 
+
+            #     elif key[:3] == 'all':
+            #         filename = os.path.join(self.summary_dir, 
+            #             policy + key + '.csv')
+            #         with open(filename, 'w+') as csvfile:
+            #             writer = csv.writer(csvfile)
+            #             writer.writerows(val)
+            #         remove.append(key)
+            #         #stats.pop(key)
+            
+            # for key in remove:
+            #     stats.pop(key)
 
             filename = os.path.join(self.summary_dir, policy + '.csv')
             utils.save_dict_as_csv(stats, filename)
@@ -788,6 +846,9 @@ class AgentEvaluator(object):
             steps_to_r = -1
            
             o, j = self.agent.reset(random=random, plant_file=self.plant_file)
+
+            if self.episode_delay:
+                time.sleep(self.episode_delay)
 
             for step in range(self.episode_length):
                 a = policy.get_action(o, j)
@@ -847,7 +908,7 @@ class AgentEvaluator(object):
         self.save_results()
 
 def main(args_dict):
-    """ Runs tests specified by commandline args. Note, only"""
+    """ Runs tests specified by commandline args."""
     if args_dict['test'] == 'pr':
         print('Running detector precision recall test.')
         detector_PR(output_dir=args_dict['output_dir'])
@@ -905,3 +966,5 @@ if __name__ == '__main__':
 
     # python evaluator.py --test 'baseline' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
     # python evaluator.py --test 'baseline' --results-file '/mnt/storage/testing/2019_01_11_05_26/test_results.pkl' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
+    # python evaluator.py --test 'canopy' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
+    # python evaluator.py --test 'fixation' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'

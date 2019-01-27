@@ -865,4 +865,4 @@ if __name__ == '__main__':
 
     # python policy.py --results-file '/mnt/storage/testing/2018_10_22_07_55/test_results.pkl' --weights-file '/mnt/storage/results/2018_10_21_10_20/ddpg'
     # python policy.py --weights-file '/mnt/storage/results/2018_10_21_10_20/ddpg'
-    # python policy.py --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
+    
