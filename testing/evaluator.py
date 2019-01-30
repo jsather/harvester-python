@@ -183,13 +183,13 @@ def ddpg_canopy_compare(output_dir, weights_file, results_file):
             weights_file=weights_file)
 
         policies = [ddpg]
-        plants = ['model_mu35'] #['model_mu5', 'model_mu20', 'model_mu50']
+        plants = ['model_mu275', 'model_mu425', 'model_mu125'] #['model_mu35'] ['model_mu5', 'model_mu20', 'model_mu50']
 
         for plant in plants:
             print('Evaluating on plant: ' + plant)
             test = 'canopy comparision ' + plant
     
-            if plant == 'model_mu50': # add delay for loading big plant
+            if plant == 'model_mu425': # add delay for loading big plant
                 delay = 10
             else:
                 delay = 0
