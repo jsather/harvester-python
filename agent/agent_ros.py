@@ -194,7 +194,7 @@ class AgentROS(object):
         self.moveit_robot = moveit_commander.RobotCommander()
         self.moveit_scene = moveit_commander.PlanningSceneInterface()
         self.moveit_arm_group = moveit_commander.MoveGroupCommander('arm')
-        self.moveit_gripper_group = moveit_commander.MoveGrhttps://www.google.com/search?client=ubuntu&channel=fs&q=matplotlib+name+figure&ie=utf-8&oe=utf-8oupCommander(
+        self.moveit_gripper_group = moveit_commander.MoveGroupCommander(
             'gripper')
         self.moveit_ik = agent_utils.GetIK(group='arm', verbose=False)
         self.moveit_config = Client('/move_group/trajectory_execution')
@@ -372,7 +372,10 @@ class AgentROS(object):
         else:
             print("Invalid move group specified. Cannot execute trajectory.")
             return False
-
+        # for this version of moveit put joints as jointstate...
+        goal = JointState(position=goal)
+        goal.header.frame_id = self.moveit_robot.get_planning_frame()
+        goal.name = self.joint_names
         return move_group.go(goal, wait=wait)
 
     def execute_trajectory(self, goal=None, group='arm', name=None, wait=True):
