@@ -24,30 +24,6 @@ import detector.config as detector_cfg
 import detector.detector as detector 
 import utils 
 
-import pdb 
-
-# TODO: 
-# x  1) Debug detector tests
-# x  2) Finish ddpg tests
-#    2.5) Add analysis to ddpg tests: 
-#         - fixation: positions to 3d coordinates 
-#                     from there, can plot sequential positions on 3d plot (path) and visually determine domains of attraction?
-#                                 or can run mean shift or some algorithm to find areas where tend to focus... look into this. dbscan or meanshift - read paper and watch vid
-#                                 bottom line is need to find boundaries of domains of attraction, then classify pts as in regions or outside and calc avg rewards
-#         - global exploration: positions to 3d coordinates
-#                               what is the new idea? - just video, but keep coords just in case!
-#    2.75) Make scripts to do clustering for fixation and global exploration
-#    3) Debug ddpg tests
-# x  4) Run detector tests
-#    5) Run ddpg tests 
-#       TODO: 
-#       video for each baseline comparison
-#    x  canopy density at mu=35
-#    x  run fixation test
-#       analysis scripts for fixation test
-#       videos clips for global and local exploration
-#       put results from each test in report!
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def detector_PR(output_dir, granularity=0.05, max_eval=None):
     """ Runs detector on test set, varying thresholds to create 
@@ -70,7 +46,7 @@ def detector_performance(output_dir):
     dataset = test_cfg.image_test_set 
     dt = detector.Detector()
 
-    evaluator = DetectorEvaluator(dt, output_dir=output_dir)
+    evaluator = DetectorEvaluator(dt, output_dir=output_dir, overlap_criterion=0.5)
     evaluator.evaluate_dataset(dataset)
     evaluator.save_results()
 
@@ -138,13 +114,6 @@ def ddpg_baseline_compare(output_dir, weights_file, results_file):
 def ddpg_canopy_compare(output_dir, weights_file, results_file):
     """ Runs ddpg on three different mean canopy densities to assess 
         how performance changes. 
-        Run DDPG policy for 100 episodes on 3 canopy densities. Log episode
-        lengths, as well as other performance stats, in case anything 
-        interesting.
-        NOTE: Requires premade plant models specified as model_mu#.rsdf
-        BUG: Seems to be spawning first plant as previous model. 
-        Temporary fix is to run 101 plants and discard first when analyzing
-        data.
     """
     import agent.agent_ros as agent_ros
     import agent.config as agent_cfg
@@ -208,14 +177,6 @@ def ddpg_fixation_analysis(output_dir, weights_file, results_file):
     """ Run ddpg policy on different plants and log special data for 
         analyzing fixation behavior. Save plant models!!
     """
-    # NOTE: Let's reconsider this test... I think once per episode
-    #       makes sense. Although I think that this may be harder to
-    #       measure than I expected. How do I eliminate fixations
-    #       from the starting location?? Maybe I can eliminate those?
-    #       Or at least it will be something to talk about...
-    #       Do I need to compare to random? What is the purpose in
-    #       this case? maybe I do not. Eh might as well include it just
-    #       in case...
     import agent.agent_ros as agent_ros
     import agent.config as agent_cfg
     import ddpg.networks as networks
@@ -367,6 +328,7 @@ class DetectorEvaluator(object):
                 rand_binary = (np.random.binomial(1, 0.5),
                     np.random.binomial(1, 0.5),
                     np.random.binomial(1, 0.5))
+
             self.predict_colors.append(
                 (255*rand_binary[0], 255*rand_binary[1], 255*rand_binary[2]))
             self.gt_colors.append(
@@ -445,6 +407,9 @@ class DetectorEvaluator(object):
             self.draw_result(image, predicted, ground_truth) # update this!
             cv2.imshow('Results Overlay: ' + image_path, image)
             cv2.waitKey(0)
+        
+        # self.draw_result(image, predicted, ground_truth) 
+        # cv2.imwrite('im_annotated.JPG', image)
 
     def evaluate_dataset(self, dataset, thresholds=[0.5], max_eval=None):
         """ Evaluates detector on given dataset.
@@ -571,7 +536,6 @@ class DetectorEvaluator(object):
             ground truth values for image.
         """
         # Predicted bbox classification
-        pdb.set_trace()
         for t, thresh in enumerate(thresholds):
             valid_pds = [pd for pd in predicted if pd[1] >= thresh]
             for pd in valid_pds:
@@ -760,7 +724,6 @@ class AgentEvaluator(object):
             #         filename = os.path.join(self.summary_dir, 
             #             policy + key + '.csv')
                     
-            #         pdb.set_trace()
             #         positions = {'theta': [j[0] for j in val],
             #             'phi': [j[1] for j in val]}
             #         utils.save_dict_as_csv(positions, filename)
@@ -773,7 +736,6 @@ class AgentEvaluator(object):
             #     elif key == 'all_rewards':
             #         filename = os.path.join(self.summary_dir, 
             #             policy + key + '.csv')
-            #         pdb.set_trace()
             #         rewards = {'rewards': val}
             #         utils.save_dict_as_csv(rewards, filename)
             #         # with open(filename, 'w+') as csvfile:
@@ -963,7 +925,8 @@ if __name__ == '__main__':
     if args_dict['weights_file'] == '':
         args_dict['weights_file'] = utils.get_latest_weights(args_dict['output_dir'])
     main(args_dict)   
-
+    
+    # python evaluator.py --test 'stats'
     # python evaluator.py --test 'baseline' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
     # python evaluator.py --test 'baseline' --results-file '/mnt/storage/testing/2019_01_11_05_26/test_results.pkl' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'
     # python evaluator.py --test 'canopy' --weights-file '/mnt/storage/testing/2018_10_14_16_58/ddpg-241738'

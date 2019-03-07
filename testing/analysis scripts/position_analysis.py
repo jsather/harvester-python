@@ -1,22 +1,10 @@
 """
-    fixation_analysis.py contains scripts for analyzing fixation data, as the
+    position_analysis.py contains scripts for analyzing position data, as the
     name might imply.
     
     author: Jonathon Sather
-    last updated: 1/24/2019
+    last updated: 3/3/2019
 """
-
-# fixation analysis
-
-# so then, what remains is
-# - get videos of each of the policies,
-# - get screenshots when it seems like uncovering berries (with and without info)
-# - make visual showing both fixation behavior and not - discard random policy
-# - comment that speculate that this behavior is due to fixation and human
-#   logic, but that it is unreliable due to not being able to communicate
-# - based on both the performance and the appearance it is unlikely that there is
-#   any propagation through time that is super beneficial - could just be responding
-#   to other clues at these instances
 
 import ast 
 import csv
@@ -43,6 +31,7 @@ import pdb
 
 show_plant = True
 display_image = False 
+outdir = '/media/jonathon/JON SATHER/Thesis/results/fixation_obs'
 
 class Camera(object):
     """ ROS camera subscriber. """
@@ -55,6 +44,40 @@ class Camera(object):
         full = np.reshape(flat, (ros_data.height, ros_data.width, -1))
         self.obs = full[...,::-1] # convert to bgr
         # self.obs = cv2.resize(full, (self.obs_shape[0], self.obs_shape[1]))
+
+
+def arm_over_existing(obs, hemi, name='plant'):
+    """ Overlays image with arm over previously annotated hemi. """      
+
+    hemi_gray = cv2.cvtColor(hemi, cv2.COLOR_BGR2GRAY)
+    # _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
+    #     cv2.THRESH_BINARY_INV)
+    _, hemi_mask = cv2.threshold(hemi_gray, 1, 255, 
+        cv2.THRESH_BINARY)
+    hemi_mask_inv = 255 - hemi_mask 
+
+    # hemi_fg = cv2.bitwise_and(hemi, hemi, mask=hemi_mask) 
+
+    obs_hsv = cv2.cvtColor(obs, cv2.COLOR_BGR2HSV)
+    _, arm_mask = cv2.threshold(obs_hsv[:,:,1], 3, 255, cv2.THRESH_BINARY_INV)
+    arm_mask_inv = 255 - arm_mask
+    arm_fg = cv2.bitwise_and(obs, obs, mask=arm_mask)
+    arm_fg_hemi = cv2.bitwise_and(arm_fg, arm_fg, mask=hemi_mask)
+    arm_fg_no_hemi = cv2.bitwise_and(arm_fg, arm_fg, mask=hemi_mask_inv)
+
+    existing = cv2.imread(os.path.join(outdir, name[:-4] + '_plant' + '.png'))
+    existing_fg = cv2.bitwise_and(existing, existing, mask=arm_mask)
+    existing_bg = cv2.bitwise_and(existing, existing, mask=arm_mask_inv)
+    existing_fg_hemi = cv2.bitwise_and(existing_fg, existing_fg, mask=hemi_mask)
+
+    # arm_blend =  cv2.addWeighted(arm_fg, 0.6, existing_fg, 0.4, 0.0)
+    arm_blend_hemi = cv2.addWeighted(arm_fg_hemi, 0.6, existing_fg_hemi, 0.4, 0.0)
+    arm_blend = cv2.add(arm_blend_hemi, arm_fg_no_hemi) 
+
+    overlay = cv2.add(existing_bg, arm_blend)
+
+    cv2.imwrite(os.path.join(outdir, name[:-4] + '_plant_arm_blend_hemi' + '.png'),
+        overlay)
 
 def create_hemisphere(radius):
     """ Returns x,y,z data for plotting hemisphere of specified radius. """
@@ -138,11 +161,19 @@ def create_overlay_image(coords, rewards, obs, radius, hemi, name='plant'):
     plot = cv2.imread('plot.png')            
 
     hemi_gray = cv2.cvtColor(hemi, cv2.COLOR_BGR2GRAY)
-    _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
-        cv2.THRESH_BINARY_INV)
+    # _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
+    #     cv2.THRESH_BINARY_INV)
+    _, hemi_mask = cv2.threshold(hemi_gray, 1, 255, 
+        cv2.THRESH_BINARY)
     hemi_mask_inv = 255 - hemi_mask 
 
     hemi_fg = cv2.bitwise_and(hemi, hemi, mask=hemi_mask) 
+    
+    obs_hsv = cv2.cvtColor(obs, cv2.COLOR_BGR2HSV)
+    _, arm_mask = cv2.threshold(obs_hsv[:,:,1], 3, 255, cv2.THRESH_BINARY_INV)
+    arm_mask_inv = 255 - arm_mask
+    arm_fg = cv2.bitwise_and(obs, obs, mask=arm_mask)
+
     obs_fg = cv2.bitwise_and(obs, obs, mask=hemi_mask)
     obs_bg = cv2.bitwise_and(obs, obs, mask=hemi_mask_inv)
 
@@ -150,16 +181,27 @@ def create_overlay_image(coords, rewards, obs, radius, hemi, name='plant'):
     obs_hemi = cv2.add(hemi_blended, obs_bg) 
 
     plot_gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
-    _, plot_mask = cv2.threshold(plot_gray, 254, 255, 
-        cv2.THRESH_BINARY_INV)
+    # _, plot_mask = cv2.threshold(plot_gray, 254, 255, 
+    #     cv2.THRESH_BINARY_INV)
+    _, plot_mask = cv2.threshold(plot_gray, 1, 255, 
+        cv2.THRESH_BINARY)
     plot_mask_inv = 255 - plot_mask 
     
     plot_fg = cv2.bitwise_and(plot, plot, mask=plot_mask)
     obs_hemi_bg = cv2.bitwise_and(obs_hemi, obs_hemi, 
         mask=plot_mask_inv) 
-    overlay = cv2.add(plot_fg, obs_hemi_bg)
 
-    cv2.imwrite(name[:-4] + '_plant' + '.png', overlay)
+    overlay_orig = cv2.add(plot_fg, obs_hemi_bg)
+    
+    overlay_fg = cv2.bitwise_and(overlay_orig, overlay_orig,
+        mask=arm_mask)
+    overlay_bg = cv2.bitwise_and(overlay_orig, overlay_orig,
+        mask=arm_mask_inv)
+    
+    overlay = cv2.add(overlay_bg, arm_fg)
+
+    cv2.imwrite(os.path.join(outdir, name[:-4] + '_plant_arm_blend' + '.png'),
+        overlay)
 
 def exit_gracefully(sig, frame):
     """ Save configuration before exit. """
@@ -206,7 +248,8 @@ def main():
     # plant_list = ['model424.sdf',
     #     'model51.sdf', 
     #     'model423.sdf']
-    plant_list = ['model84.sdf']
+    plant_list = ['model122.sdf', 'model308.sdf', 'model74.sdf', 'model149.sdf']
+    pos_list = [(-0.6, 1.15), (-0.65, 1.4), (-.12, 1.11), (-1.6, 0.4)]
 
     while test_dirs:
         earliest = min(test_dirs, key=os.path.getctime)
@@ -248,11 +291,22 @@ def main():
         if plant_name in plant_list:
             # spawn plant and take image
             agent.plant.new(sdf=plant_files[plant_no])
-            time.sleep(30)
+            time.sleep(25)
 
-            create_overlay_image(coords=coords[plant_no], rewards=rewards[plant_no],obs=camera.obs, radius=agent_cfg.hemi_radius, hemi=hemi, name=plant_name)
+            (theta, phi) = pos_list[plant_list.index(plant_name)]
+            agent.move_to_angles(theta=theta, phi=phi)
+            time.sleep(5)
             
-            pdb.set_trace()
+
+            cv2.imwrite(
+                os.path.join(outdir, plant_name[:-4] + '_obs' + '.png'), 
+                agent.obs[...,::-1])
+            arm_over_existing(obs=camera.obs, hemi=hemi, name=plant_name)
+            # create_overlay_image(coords=coords[plant_no],
+            #     rewards=rewards[plant_no], obs=camera.obs,
+            #     radius=agent_cfg.hemi_radius, hemi=hemi, name=plant_name)
+    
+    exit_gracefully(sig='program  end', frame=None)
 
 if __name__ == "__main__":
     main()

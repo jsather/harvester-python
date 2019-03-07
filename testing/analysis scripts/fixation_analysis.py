@@ -6,18 +6,6 @@
     last updated: 1/24/2019
 """
 
-# fixation analysis
-
-# so then, what remains is
-# - get videos of each of the policies,
-# - get screenshots when it seems like uncovering berries (with and without info)
-# - make visual showing both fixation behavior and not - discard random policy
-# - comment that speculate that this behavior is due to fixation and human
-#   logic, but that it is unreliable due to not being able to communicate
-# - based on both the performance and the appearance it is unlikely that there is
-#   any propagation through time that is super beneficial - could just be responding
-#   to other clues at these instances
-
 import ast 
 import csv
 import glob 
@@ -41,12 +29,15 @@ import agent.agent_ros as agent_ros
 
 import pdb 
 
-show_plant = False 
+show_plant = True
 display_image = False 
+#outdir = '/media/jonathon/JON SATHER/Thesis/results/good_fixations_annotated'
+#outdir = '/media/jonathon/JON SATHER/Thesis/results/bad_fixations_annotated'
+outdir = '/media/jonathon/JON SATHER/Thesis/results/no_fixations_annotated'
 
 class Camera(object):
     """ ROS camera subscriber. """
-    def __init__(self, topic='/harvester/camera1/image_raw'):
+    def __init__(self, topic='/harvester/camera2/image_raw'):
         self.sub = rospy.Subscriber(topic, Image, self._process_image_data, queue_size=1)
         self.obs = None 
     
@@ -85,6 +76,8 @@ def create_hemi_image(radius):
 
 def create_overlay_image(coords, rewards, radius, hemi, obs=None, name='plant'):
     """ Creates image overlay and saves to file. """
+    global outdir 
+
     x_pos = [] 
     y_pos = [] 
     z_pos = [] 
@@ -137,10 +130,12 @@ def create_overlay_image(coords, rewards, radius, hemi, obs=None, name='plant'):
     time.sleep(1)
     plot = cv2.imread('plot.png')            
     
-    if obs:
+    if obs is not None:
         hemi_gray = cv2.cvtColor(hemi, cv2.COLOR_BGR2GRAY)
-        _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
-            cv2.THRESH_BINARY_INV)
+        # _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
+        #     cv2.THRESH_BINARY_INV)
+        _, hemi_mask = cv2.threshold(hemi_gray, 1, 255, 
+            cv2.THRESH_BINARY)
         hemi_mask_inv = 255 - hemi_mask 
 
         hemi_fg = cv2.bitwise_and(hemi, hemi, mask=hemi_mask) 
@@ -151,8 +146,10 @@ def create_overlay_image(coords, rewards, radius, hemi, obs=None, name='plant'):
         obs_hemi = cv2.add(hemi_blended, obs_bg) 
 
         plot_gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
-        _, plot_mask = cv2.threshold(plot_gray, 254, 255, 
-            cv2.THRESH_BINARY_INV)
+        # _, plot_mask = cv2.threshold(plot_gray, 254, 255, 
+        #     cv2.THRESH_BINARY_INV)
+        _, plot_mask = cv2.threshold(plot_gray, 1, 255, 
+            cv2.THRESH_BINARY)
         plot_mask_inv = 255 - plot_mask 
         
         plot_fg = cv2.bitwise_and(plot, plot, mask=plot_mask)
@@ -160,11 +157,11 @@ def create_overlay_image(coords, rewards, radius, hemi, obs=None, name='plant'):
             mask=plot_mask_inv) 
         overlay = cv2.add(plot_fg, obs_hemi_bg)
 
-        cv2.imwrite(name[:-4] + '_plant' + '.png', overlay)
+        cv2.imwrite(os.path.join(outdir, name[:-4] + '_plant' + '.png'), 
+            overlay)
     else:
         plot_gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
-        _, plot_mask = cv2.threshold(plot_gray, 1, 255,
-            cv2.THRESH_BINARY)
+        _, plot_mask = cv2.threshold(plot_gray, 1, 255, cv2.THRESH_BINARY)
         # _, plot_mask = cv2.threshold(plot_gray, 254, 255,
         #     cv2.THRESH_BINARY_INV)
         plot_mask_inv = 255 - plot_mask 
@@ -173,7 +170,8 @@ def create_overlay_image(coords, rewards, radius, hemi, obs=None, name='plant'):
         hemi_bg = cv2.bitwise_and(hemi, hemi, mask=plot_mask_inv)
         overlay = cv2.add(plot_fg, hemi_bg)
 
-        cv2.imwrite(name[:-4] + '_hemi' + '.png', overlay)
+        cv2.imwrite(os.path.join(outdir, name[:-4] + '_hemi' + '.png'), 
+            overlay)
 
 def exit_gracefully(sig, frame):
     """ Save configuration before exit. """
@@ -213,10 +211,15 @@ def main():
     rewards = []
     coords = []
     plant_files = []
-    plant_list = ['model19.sdf', 'model84.sdf', 'model424.sdf',
-        'model161.sdf', 'model309.sdf','model347.sdf', 'model363.sdf',
-        'model49.sdf', 'model51.sdf', 'model107.sdf', 'model355.sdf', 
-        'model423.sdf']
+    good_list = [65, 366, 309, 18, 42] #[122, 327, 308, 195, 189]  
+    bad_list = [196, 178, 149, 95, 74] #[307, 379, 390, 422, 424] 
+    no_list = [219, 314, 336, 186, 93] #[3, 14, 227, 255, 269] 
+
+    plant_list = ['model' + str(num) + '.sdf' for num in no_list]
+    # plant_list = ['model19.sdf', 'model84.sdf', 'model424.sdf',
+    #     'model161.sdf', 'model309.sdf','model347.sdf', 'model363.sdf',
+    #     'model49.sdf', 'model51.sdf', 'model107.sdf', 'model355.sdf', 
+    #     'model423.sdf']
     # plant_list = ['model424.sdf',
     #     'model51.sdf', 
     #     'model423.sdf']
@@ -287,8 +290,8 @@ def main():
     
     for plant_no in range(len(coords)):
         plant_name = file_from_path(plant_files[plant_no])
-        # if plant_name in plant_list:
-        if len(coords[plant_no]) > 50:
+        if plant_name in plant_list:
+        # if len(coords[plant_no]) > 50:
             # spawn plant and take image
             if show_plant:
                 plant.new(sdf=plant_files[plant_no])
@@ -296,10 +299,10 @@ def main():
                 obs = camera.obs
             else:
                 obs = None
-
+ 
             create_overlay_image(coords=coords[plant_no], rewards=rewards[plant_no], radius=agent_cfg.hemi_radius, hemi=hemi, obs=obs, name=plant_name)
-            
-            pdb.set_trace()
+    
+    os.kill(os.getpid(), signal.SIGTERM)
 
     # for plant_no in range(len(coords)):
     # while True:

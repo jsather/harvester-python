@@ -43,8 +43,6 @@ try:
 except ImportError as e:
     print('Unable to import RewardROS: ', e)
 
-import pdb
-
 class AgentROS(object):
     """ Agent superclass for interfacting with harvesting robot through
         ROS/Gazebo.
@@ -663,14 +661,6 @@ class HemiAgentROS(AgentROS):
         else:
             reward = -self.existence_penalty
 
-        # detect_reward = self.detection_reward * \
-        #     int(self.detector_feedback.get_reward() > self.reward_threshold)
-        # act_norm = 1/self.action_bound * np.array(action)
-        # act_penalty = self.action_penalty * np.inner(act_norm, act_norm)
-        # goal_penalty = self.invalid_goal_penalty * (not in_bounds)
-        
-        # reward = detect_reward - self.existence_penalty - goal_penalty - \
-        #     act_penalty
         return reward
     
     def get_last_return(self):

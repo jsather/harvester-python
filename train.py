@@ -16,8 +16,6 @@ import warnings
 
 import psutil
 
-import pdb # temporary
-
 def get_named_pids(name):
     """ Returns pids of running processes with given name. """
     named = []

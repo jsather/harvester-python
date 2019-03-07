@@ -16,8 +16,6 @@ import config as image_cfg
 from detector.detector import Detector
 from image_utils import Arrow
 
-import pdb
-
 class FeedROS(object):
     def __init__(self, init_node=False, tf_session=None):
         """ Initialize detector, ros subscribers, and feed. """

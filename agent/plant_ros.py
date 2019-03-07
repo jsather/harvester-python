@@ -21,7 +21,6 @@ from gazebo_msgs.srv import DeleteModel
 
 import config as agent_cfg
 
-import pdb 
 
 class PlantROS:
     """ Class for interfacting with strawberry plant through ROS/Gazebo.
@@ -182,8 +181,6 @@ if __name__ == '__main__':
     plant.new()
     sleep(20)
     plant.remove()
-
-    pdb.set_trace()
 
     print('Spawning bed')
     plant.new_full_bed()

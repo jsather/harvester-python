@@ -26,12 +26,6 @@ import agent.config as agent_cfg
 import ddpg.networks as networks
 import ddpg.noise as noise
 
-import pdb
-
-# TODO: Consider putting angle_check and several other methods in utils?
-#       Make sure Evaluator transferred to evaluator.py and then get rid of 
-#        class!
-
 class Policy(object):
     """ General policy object. """
 
@@ -604,20 +598,6 @@ class Evaluator(object):
                 f.write('name: ' + policy.name + '\n')
                 if policy.name == 'ddpg':
                     f.write('  weights file: ' + policy.weights_file + '\n')
-    
-    # def save_testing_variables(self):
-    #     """ Saves testing variables in summary directory. """
-    #     print('{} Saving testing variables to: {}'.format(
-    #         datetime.datetime.now().strftime('%m-%d %H:%M:%S'), 
-    #         self.summary_dir))
-    #     var_dict = {
-    #         ''
-    #     }
-    #     save_loc = os.path.join(self.summary_dir, 'testing_vars.pkl')
-    #     with open(save_loc, 'w') as f:
-    #         pickle.dump(var_dict, f)
-    #     print('Done.')
-    #     sys.stdout.flush()
 
     def save_results(self):
         """ Saves results stored in memberdata to pkl file. """
