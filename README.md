@@ -1,4 +1,4 @@
-# harvester-python# harvester-python
+# harvester-python
 ![harvester-gif](https://imgur.com/0dghLur.gif)
 
 Python interface for the harvester-sim environment. Contains utilities for real-time strawberry detection and dynamic detection using reinforcement learning. 
