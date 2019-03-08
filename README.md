@@ -1,63 +1,32 @@
 # harvester-python
 ![harvester-gif](https://imgur.com/0dghLur.gif)
 
-Python interface for the harvester-sim environment. Contains utilities for real-time strawberry detection and dynamic detection using reinforcement learning. 
+Python interface for the [harvester-sim](https://github.com/jsather/harvester-sim) environment. Contains utilities for real-time strawberry detection and dynamic detection using reinforcement learning.
 
 ## Components
-There are several submodules that work together for different components of the project. 
+There are several submodules that work together for different components of the project. They work together as follows:
+
+![dataflow](https://imgur.com/s62ti61.jpg)
 
 ### Agent
 
+The agent submodule is the primary interface between ROS/Gazebo and python. It contains `agent.py` which contains classes for directly controlling the virtual harvester and interacting with the environment. 
+
 ### Image
+
+The image submodule contains tools for displaying and annotating the real-time camera feed.
 
 ### Detector
 
+The detector submodule is used to interface with the pretrained strawberry detector using You Only Look Once, Version 2 ([YOLOv2](https://arxiv.org/abs/1612.08242)).
+
 ### DDPG
+
+The DDPG submodule is responsible for running Deep Deterministic Policy Gradients ([DDPG](https://arxiv.org/abs/1509.02971)) with the simulated environment. 
 
 ### Testing
 
-### Harvester-ros
-
-Here outline the different components of the repo - agent, image, detector, ddpg, testing and harvester-ros.
-
-go thru steps - set up firewalls 
-set up disk storage
-go to docker_setup section readme
-
-docker_setup
-install on instance
-get latest cuda files
-describe additional hacks that added
-run preinstall steps - then set up nfs
-run build
-then deploy - show what should look like in browser
-
-then go thru different sections of project - stating what they are used for and referring to resp readme
-
-agent
-how to test environment - go to agent class NOTE to future jon: make harvester-ros a separate repo! or not... nahh let's keep it all one
-plant demo
-moving agent
-adding own agent subclass
-refer to harvester-ros
-mention inspired by aigym - link to them
-
-detector
-cite yolo, give summary + where this fits in to my algo
-how to pretrain detector - add readme in detector section with explicit instructions
-how to test detector - add in detector readme 
-
-ddpg
-cite ddpg, give summary, how frame problem
-how to train ddpg - put in ddpg readme
-how to test ddpg - put in ddpg readme
-
-image 
-how to run image annotation
-
-harvester-ros
-state that used with agent class to run simulated environment
-go thru what each of the folders do 
+This submodule contains various utilities and scripts for evaluating the learned agent and detector's performance.
 
 ## License
 This project is licensed under the BSD 2-CLAUSE LICENSE- see the [LICENSE.md](LICENSE.md) file for details
