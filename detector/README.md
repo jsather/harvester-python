@@ -1,6 +1,13 @@
 # detector 
 
-detector
-cite yolo, give summary + where this fits in to my algo
-how to pretrain detector - add readme in detector section with explicit instructions
-how to test detector - add in detector readme 
+Module for implementing pretrained object detector using You Only Look Once, version 2 ([YOLOv2](https://arxiv.org/abs/1612.08242)). 
+
+## How to run
+To run, specify network files in `config.py` and create `detector.Detector` object.
+
+```
+import detector.Detector as dt
+
+detector = dt()
+bbs = dt.detect(image)
+```
