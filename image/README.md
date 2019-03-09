@@ -1,6 +1,9 @@
 # image 
 
+Module for annotating images in real-time and displaying feed. 
 
-image 
-how to run image annotation
+## Notable files
+* `image_ros.py`: ROS/detector interface for getting rewards and/or showing feed.
+* `show_feed.py`: script for showing image feed.
+
 
