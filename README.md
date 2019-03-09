@@ -8,15 +8,15 @@ There are several submodules that work together for different components of the 
 
 ![dataflow](https://imgur.com/s62ti61.jpg)
 
-* agent: primary interface between ROS/Gazebo and python. 
+* `agent`: primary interface between ROS/Gazebo and python. 
 
-* image: tools for displaying and annotating the real-time camera feed.
+* `image`: tools for displaying and annotating the real-time camera feed.
 
-* detector: used to interface with the pretrained strawberry detector using You Only Look Once, Version 2 ([YOLOv2](https://arxiv.org/abs/1612.08242)).
+* `detector`: used to interface with the pretrained strawberry detector using You Only Look Once, Version 2 ([YOLOv2](https://arxiv.org/abs/1612.08242)).
 
-* ddpg: responsible for running Deep Deterministic Policy Gradients ([DDPG](https://arxiv.org/abs/1509.02971)) with the simulated environment. 
+* `ddpg`: responsible for running Deep Deterministic Policy Gradients ([DDPG](https://arxiv.org/abs/1509.02971)) with the simulated environment. 
 
-*testing: utilities and scripts for evaluating the learned agent and detector's performance.
+* `testing`: utilities and scripts for evaluating the learned agent and detector's performance.
 
 ## License
 This project is licensed under the BSD 2-CLAUSE LICENSE- see the [LICENSE.md](LICENSE.md) file for details
