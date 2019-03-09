@@ -8,30 +8,18 @@ There are several submodules that work together for different components of the 
 
 ![dataflow](https://imgur.com/s62ti61.jpg)
 
-### Agent
+* agent: primary interface between ROS/Gazebo and python. 
 
-The agent submodule is the primary interface between ROS/Gazebo and python. It contains `agent.py` which contains classes for directly controlling the virtual harvester and interacting with the environment. 
+* image: tools for displaying and annotating the real-time camera feed.
 
-### Image
+* detector: used to interface with the pretrained strawberry detector using You Only Look Once, Version 2 ([YOLOv2](https://arxiv.org/abs/1612.08242)).
 
-The image submodule contains tools for displaying and annotating the real-time camera feed.
+* ddpg: responsible for running Deep Deterministic Policy Gradients ([DDPG](https://arxiv.org/abs/1509.02971)) with the simulated environment. 
 
-### Detector
-
-The detector submodule is used to interface with the pretrained strawberry detector using You Only Look Once, Version 2 ([YOLOv2](https://arxiv.org/abs/1612.08242)).
-
-### DDPG
-
-The DDPG submodule is responsible for running Deep Deterministic Policy Gradients ([DDPG](https://arxiv.org/abs/1509.02971)) with the simulated environment. 
-
-### Testing
-
-This submodule contains various utilities and scripts for evaluating the learned agent and detector's performance.
+*testing: utilities and scripts for evaluating the learned agent and detector's performance.
 
 ## License
 This project is licensed under the BSD 2-CLAUSE LICENSE- see the [LICENSE.md](LICENSE.md) file for details
-
-mention darknet yolo ddpg, etc
 
 ## Acknowledgments
 * agent interface inspired by [GPS](http://rll.berkeley.edu/gps/) and [OpenAI Gym](https://gym.openai.com/)
