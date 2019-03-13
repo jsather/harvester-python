@@ -7,6 +7,7 @@ Implementation of Deep Deterministic Policy Gradients ([DDPG](https://arxiv.org/
 * `networks.py`: actor and critic networks classes
 * `replay_buffer.py`: experience replay classes
 * `noise.py`: Ornstein-Uhlenbeck noise class
+* `ddpg_agent.py`: ROS communication node to start and communicate with agent
 
 ## How to train
 Ideally, start/continue training through the WatchDog class (one folder level up). This approach periodically checks to make sure all components of the system are running, and restarts/continues the training process as needed.
