@@ -1,4 +1,6 @@
-""" agent_ros.py contains interface to talk to the harvester arm in
+""" 
+********** NOTE: THIS IS A WORK IN PROGRESS! I WILL "TRIM THE FAT" SOON *************
+    agent_ros.py contains interface to talk to the harvester arm in
     Gazebo/ROS.
 
     Structure inspired by:
