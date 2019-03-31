@@ -1,7 +1,7 @@
 # harvester-python
 ![harvester-gif](https://imgur.com/0dghLur.gif)
 
-Python interface for the [harvester-sim](https://github.com/jsather/harvester-sim) environment. Contains utilities for real-time strawberry detection and viewpoint optimization using deep reinforcement learning.
+Python 2 interface for the [harvester-sim](https://github.com/jsather/harvester-sim) environment. Contains utilities for real-time strawberry detection and viewpoint optimization using deep reinforcement learning.
 
 ## Components
 There are several submodules that work together for different components of the project. They work together as follows:
