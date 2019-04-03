@@ -6,13 +6,11 @@ import time
 import numpy as np 
 
 import agent.plant_ros as plant_ros 
-import agent.agent_utils as agent_utils 
-
-import pdb 
+import agent.utils as agent_utils 
 
 def plants_in_row(plant, names=['model']):
     spacing = (2/np.sqrt(2)) * abs(plant.bed_dy)/(plant.num_rows + 1)
-    x = plant.bed_corner[0] + np.sign(plant.bed_dx)*spacing*1.5#np.sign(plant.bed_dx)*spacing/2
+    x = plant.bed_corner[0] + np.sign(plant.bed_dx)*spacing*1.5
 
     for plant_num, name in enumerate(names):
         plant_name = 'plant' + str(plant_num)
@@ -31,7 +29,9 @@ def main():
 
     plant = plant_ros.PlantROS() 
     plants_in_row(plant, plant_names) 
-    pdb.set_trace()
+    
+    while True:
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()

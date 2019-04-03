@@ -12,7 +12,7 @@ import copy
 
 import agent_ros
 import plant_ros
-import agent_utils
+import utils as agent_utils
 
 save_loc = os.path.join(os.path.expanduser('~'), 'projects', 'harvester',
     'python', 'agent', 'joint_angles', 'lut_final3')

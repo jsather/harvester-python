@@ -1,5 +1,4 @@
 """ 
-********** NOTE: THIS IS A WORK IN PROGRESS! I WILL "TRIM THE FAT" SOON *************
     agent_ros.py contains interface to talk to the harvester arm in
     Gazebo/ROS.
 
@@ -7,41 +6,36 @@
     https://github.com/cbfinn/gps/tree/master/python/gps/agent/ros
 
     Author: Jonathon Sather
-    Last updated: 10/02/2018
+    Last updated: 4/02/2019
 
-    # TODO: Get rid of methods don't think will ever use! Also get rid of "get_xx" methods... bad python style
+    TODO: Continue pruning code and adding documentation!
 """ 
-from __future__ import print_function
+import copy
 import os
+import signal 
 import sys
 import time
-from time import sleep
-import signal
-import subprocess
-import copy
 
-import numpy as np
-import cv2
-import rospy
-import moveit_commander
-import tf_conversions
-from collections import deque
-import moveit_msgs.msg
+import cv2 
 import geometry_msgs.msg
-from std_msgs.msg import Bool
-from std_msgs.msg import String
+import moveit_commander
+import moveit_msgs.msg
+import numpy as np
+import rospy
+import tf_conversions
+from controller_manager_msgs.srv import ListControllers
+from controller_manager_msgs.srv import SwitchController
+from dynamic_reconfigure.client import Client
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import JointState
-from controller_manager_msgs.srv import SwitchController
-from controller_manager_msgs.srv import ListControllers
-from dynamic_reconfigure.client import Client
+from std_msgs.msg import String
 
-import agent_utils
+import utils as agent_utils 
 import config as agent_cfg
-from plant_ros import PlantROS  
+import plant_ros
 
 try:
-    from image.image_ros import RewardROS
+    import image.image_ros as image_ros
 except ImportError as e:
     print('Unable to import RewardROS: ', e)
 
@@ -88,7 +82,7 @@ class AgentROS(object):
         # Start simulation 
         rospy.init_node('harvester_agent_ros_node')
         self._start_gazebo(headless=headless)
-        self.plant = PlantROS()
+        self.plant = plant_ros.PlantROS()
 
         self._init_controller_names()
         self._init_controllers()
@@ -504,7 +498,7 @@ class HemiAgentROS(AgentROS):
         """ Initializes ROS/Gazebo agent. """
         super(HemiAgentROS, self).__init__(headless=headless)
 
-        signal.signal(signal.SIGINT, self.exit_gracefully)
+        signal.signal(signal.SIGINT, self.exit_gracefully) 
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.lut = agent_cfg.hemi_lut
@@ -525,7 +519,7 @@ class HemiAgentROS(AgentROS):
             self._start_feed()
 
         if detector:
-            self.detector_feedback = RewardROS(tf_session=tf_session)
+            self.detector_feedback = image.RewardROS(tf_session=tf_session)
 
     def _start_feed(self, verbose=True):
         """ Starts feed process. """
@@ -827,7 +821,7 @@ class HemiAgentROS(AgentROS):
                 else:
                     self.plant.new()
 
-                sleep(15)
+                time.sleep(15)
                 if verbose:
                     print('Done.')
                     sys.stdout.flush()
@@ -836,7 +830,7 @@ class HemiAgentROS(AgentROS):
         if random:
             if safe_mode:
                 self.move_to_angles(phi=0.05, along_hemi=False)
-                sleep(1)
+                time.sleep(1)
             fraction = self.move_to_random() 
         else:
             ret = self.move_to_angles(theta=self.reset_angles[0],

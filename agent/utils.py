@@ -104,7 +104,6 @@ class HarvesterSimulation(object):
         if world_only:
             return
 
-        # self.load_robot(verbose=verbose)    
         self.spawn_robot(verbose=verbose) # moved robot load into spawn file
         self.spawn_controllers(verbose=verbose)
         self.set_robot_config(verbose=verbose)
@@ -121,16 +120,6 @@ class HarvesterSimulation(object):
         process = roslaunch('harvester_gazebo', 'harvester_world.launch', self.cfg) 
         self.running_processes.append(process) 
         rospy.sleep(self.launch_world_delay)
-    
-    def load_robot(self, verbose=True):
-        """ Loads robot into parameter server. """
-        if verbose:
-            print("Loading robot")
-        
-        load_args = {'harvester_robotName': self.cfg['harvester_robotName']}
-        process = roslaunch('harvester_gazebo', 'load_robot.launch', load_args) 
-        self.running_processes.append(process) 
-        rospy.sleep(self.load_robot_delay)
     
     def spawn_controllers(self, verbose=True):
         """ Spawns (stopped) controllers. """

@@ -18,8 +18,7 @@ model_name = 'j2s6s200'
 num_joints = 6
 num_fingers = 2
 finger_names = ['j2s6s200_joint_finger_1', 'j2s6s200_joint_finger_2']
-joint_angles_init = np.array([-1.47, 3.00, 3.00, -0.09, 1.87, -2.23]) #np.array([-1.47, 3.00, 4.82, -0.09, 1.87, -2.23]) # TODO: Add to cfg
-joint_limits = np.array([
+joint_angles_init = np.array([-1.47, 3.00, 3.00, -0.09, 1.87, -2.23]) #np.array([-1.47, 3.00, 4.82, -0.09, 1.87, -2.23]) 
     [-np.pi, np.pi],
     [30.0/180.0*np.pi, 330.0/180.0*np.pi],
     [30.0/180.0*np.pi, 330.0/180.0*np.pi],
@@ -70,7 +69,7 @@ harvester_ros_path = os.path.join(catkin_ws, 'src', 'harvester-ros')
 harvester_default_cfg = { 
     'harvester_robotName': 'harvester1',
     'kinova_robotName': model_name, 
-    'world_name': 'worlds/strawberry_camera.world', #worlds/strawberry.world
+    'world_name': 'worlds/strawberry.world', #worlds/strawberry_camera.world
     'paused': True, 
     'gui': True, 
     'debug': False}

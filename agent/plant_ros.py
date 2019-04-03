@@ -69,14 +69,9 @@ class PlantROS:
             sdf = plant_model_prefix + '.sdf'
 
             cmd = 'erb ' + rsdf + ' > ' + sdf
-            # cmd = 'erb model.rsdf > model.sdf'
             subprocess.Popen(cmd, shell=True, cwd=self.model_dir)
         
         # Spawn plant 
-        # cmd = ['rosrun', 'gazebo_ros', 'spawn_model', '-file', 'model.sdf', '-sdf',
-        #     '-model', name, '-y', str(y), '-x', str(x)] # not working...
-        # cmd = 'rosrun gazebo_ros spawn_model -file model.sdf -sdf -model ' + \
-        #     name + ' -x ' + str(x) + ' -y ' + str(y) 
         cmd = 'rosrun gazebo_ros spawn_model -file ' + sdf + ' -sdf -model ' + \
             name + ' -x ' + str(x) + ' -y ' + str(y) 
         subprocess.Popen(cmd, shell=True, cwd=self.model_dir)
