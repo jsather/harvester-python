@@ -3,6 +3,14 @@
 
 Python 2 interface for the [harvester-sim](https://github.com/jsather/harvester-sim) environment. Contains utilities for real-time strawberry detection and viewpoint optimization using deep reinforcement learning.
 
+## Installation
+Clone the repo, and add it to your python path.
+```
+cd ~/git
+git clone https://github.com/jsather/harvester-python.git
+export PYTHONPATH=~/git/harvester-python:$PYTHONPATH
+```
+
 ## Components
 There are several submodules that work together for different components of the project. They work together as follows:
 
