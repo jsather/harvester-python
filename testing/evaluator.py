@@ -32,15 +32,16 @@ def detector_PR(output_dir, granularity=0.05, max_eval=None,
     """
     dataset = test_cfg.image_test_set 
 
-    detector_options = detector_cfg.df_options 
-    detector_options['threshold'] = granularity
-    dt = detector.Detector(options=detector_options) 
+    # detector_options = detector_cfg.df_options 
+    # detector_options['threshold'] = granularity
+    dt = detector.Detector()
+    dt.meta['thresh'] = granularity 
 
     thresholds = np.arange(granularity, 1.0, granularity).tolist()
     
     for overlap in overlap_criteria:
         evaluator = DetectorEvaluator(dt, output_dir=output_dir,
-            overlap_criterion=overlap)
+            overlap_criterion=overlap, display=True)
         evaluator.evaluate_dataset(dataset, thresholds=thresholds, max_eval=max_eval)
         evaluator.save_results()
     
@@ -309,7 +310,7 @@ class DetectorEvaluator(object):
         self.detector = detector
         self.overlap_criterion = overlap_criterion
         self.display = display
-        self.classes = self.detector.net.framework.meta['labels']
+        self.classes = self.detector.meta['labels'] #self.detector.net.framework.meta['labels']
 
         self.output_dir = output_dir 
         self.summary_dir = os.path.join(self.output_dir, 
@@ -506,7 +507,7 @@ class DetectorEvaluator(object):
         """ Saves testing configuration. """
         with open(os.path.join(self.summary_dir, 'config.txt'), 'w') as f:
             f.write('overlap criterion: ' + str(self.overlap_criterion) + '\n')
-            f.write('detector FLAGS: ' + str(self.detector.net.FLAGS) + '\n')
+            f.write('detector meta: ' + str(self.detector.meta) + '\n')
 
     def save_results(self):
         """ Saves results stored in memberdata. """
