@@ -1,8 +1,5 @@
 """ evaluator.py contains methods to test both the ddpg policy and the static 
     detector. 
-
-    Author: Jonathon Sather
-    Last updated: 4/30/2019
 """
 import argparse 
 import csv
@@ -32,8 +29,6 @@ def detector_PR(output_dir, granularity=0.05, max_eval=None,
     """
     dataset = test_cfg.image_test_set 
 
-    # detector_options = detector_cfg.df_options 
-    # detector_options['threshold'] = granularity
     dt = detector.Detector()
     dt.meta['thresh'] = granularity 
 
@@ -625,70 +620,6 @@ class DetectorEvaluator(object):
             self.dy_list[t].extend(stats['dys'])
             self.dw_list[t].extend(stats['dws'])               
             self.dh_list[t].extend(stats['dhs'])
-            
-            # tps = []
-            # tp_ious = []
-            # for g in ground_truth:
-            #     tp_idx = -1
-            #     tp_iou = 0
-
-            #     for i, pd in enumerate(valid_pds):
-            #         iou = self.iou(pd[2], g[1])
-            #         tp_idx = -1 # index of closest true positive
-            #         tp_iou = 0 # highest true positive iou
-                    
-            #         if iou > self.overlap_criterion and iou > tp_iou \
-            #             and pd[0] == g[0]:
-            #             tp_iou = iou
-            #             tp_idx = i
-
-            #     if tp_idx != -1: # true positive found - add to tp LIST instead...
-            #         tps.append(tp_idx)
-            #         tp_ious.append(tp_iou)
-            #         tp = valid_pds[tp_idx]
-            #         self.iou_list[t].append(tp_iou)
-            #         self.dx_list[t].append(tp[2][0] - g[1][0])
-            #         self.dy_list[t].append(tp[2][1] - g[1][1])
-            #         self.dw_list[t].append(tp[2][2] - g[1][2])                   
-            #         self.dh_list[t].append(tp[2][3] - g[1][3])
-            
-            # self.confusion[t][1, 1] += len(tps) # true positives
-            # self.confusion[t][1, 0] += len(ground_truth) - len(tps) # false negs
-            
-            # unique_tps = len(set(tps))
-            # self.confusion[t][0, 1] += len(valid_pds) - unique_tps# add remaining positives as fps
-
-        # Predicted bbox classification
-        # for t, thresh in enumerate(thresholds):
-        #     valid_pds = [pd for pd in predicted if pd[1] >= thresh]
-        #     for pd in valid_pds:
-        #         tp = False # Assume false positive until proven otherwise
-        #         for g in ground_truth:
-        #             iou = self.iou(pd[2], g[1])
-        #             if iou > self.overlap_criterion \
-        #                 and pd[0] == g[0]:
-        #                 tp = True
-        #                 self.iou_list[t].append(iou)
-        #                 self.dx_list[t].append(pd[2][0] - g[1][0])
-        #                 self.dy_list[t].append(pd[2][1] - g[1][1])
-        #                 self.dw_list[t].append(pd[2][2] - g[1][2])
-        #                 self.dh_list[t].append(pd[2][3] - g[1][3])
-        #         if tp:
-        #             self.confusion[t][1, 1] += 1
-        #         else:
-        #             self.confusion[t][0, 1] += 1
-
-        #     # Predicted gt classification
-        #     for g in ground_truth:
-        #         tp = False # Assume false negative until proven otherwise
-        #         for pd in valid_pds:
-        #             if self.iou(pd[2], g[1]) > self.overlap_criterion \
-        #                 and pd[0] == g[0]:
-        #                 tp = True
-        #         if tp:
-        #             continue # Already updated with predicted classification
-        #         else:
-        #             self.confusion[t][1, 0] += 1
 
 class AgentEvaluator(object):
     """ Object for evaluating policies. """
@@ -839,46 +770,6 @@ class AgentEvaluator(object):
 
         for policy in policy_names:
             stats = self.test_results[policy]
-            # remove = []
-
-            # for key, val in stats.iteritems(): # what am i actually iterating through here...
-            #     # TODO: Fix this and make it into useable form!! For at least r and j...
-            #     if key == 'all_j': # could def do this more elegantly...
-            #         filename = os.path.join(self.summary_dir, 
-            #             policy + key + '.csv')
-                    
-            #         positions = {'theta': [j[0] for j in val],
-            #             'phi': [j[1] for j in val]}
-            #         utils.save_dict_as_csv(positions, filename)
-            #         # with open(filename, 'w+') as csvfile:
-            #         #     writer = csv.writer(csvfile)
-            #         #     for pos in val:
-            #         #         writer.writerows(list(pos))
-            #         remove.append(key) 
-
-            #     elif key == 'all_rewards':
-            #         filename = os.path.join(self.summary_dir, 
-            #             policy + key + '.csv')
-            #         rewards = {'rewards': val}
-            #         utils.save_dict_as_csv(rewards, filename)
-            #         # with open(filename, 'w+') as csvfile:
-            #         #     writer = csv.writer(csvfile)
-            #         #     for reward in val:
-            #         #         writer.writerows([reward])
-            #         remove.append(key) 
-
-            #     elif key[:3] == 'all':
-            #         filename = os.path.join(self.summary_dir, 
-            #             policy + key + '.csv')
-            #         with open(filename, 'w+') as csvfile:
-            #             writer = csv.writer(csvfile)
-            #             writer.writerows(val)
-            #         remove.append(key)
-            #         #stats.pop(key)
-            
-            # for key in remove:
-            #     stats.pop(key)
-
             filename = os.path.join(self.summary_dir, policy + '.csv')
             utils.save_dict_as_csv(stats, filename)
 
