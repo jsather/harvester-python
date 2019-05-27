@@ -2,7 +2,7 @@
     detector. 
 
     Author: Jonathon Sather
-    Last updated: 1/13/2019
+    Last updated: 4/30/2019
 """
 import argparse 
 import csv
@@ -25,7 +25,8 @@ import detector.detector as detector
 import utils 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def detector_PR(output_dir, granularity=0.05, max_eval=None):
+def detector_PR(output_dir, granularity=0.05, max_eval=None, 
+    overlap_criteria=[0.5]):
     """ Runs detector on test set, varying thresholds to create 
         precision-recall curve, and saves results.
     """
@@ -36,10 +37,12 @@ def detector_PR(output_dir, granularity=0.05, max_eval=None):
     dt = detector.Detector(options=detector_options) 
 
     thresholds = np.arange(granularity, 1.0, granularity).tolist()
-
-    evaluator = DetectorEvaluator(dt, output_dir=output_dir)
-    evaluator.evaluate_dataset(dataset, thresholds=thresholds, max_eval=max_eval)
-    evaluator.save_results()
+    
+    for overlap in overlap_criteria:
+        evaluator = DetectorEvaluator(dt, output_dir=output_dir,
+            overlap_criterion=overlap)
+        evaluator.evaluate_dataset(dataset, thresholds=thresholds, max_eval=max_eval)
+        evaluator.save_results()
     
 def detector_performance(output_dir):
     """ Runs detector performance test and saves the results. """
@@ -530,42 +533,161 @@ class DetectorEvaluator(object):
         pr_csv = os.path.join(self.summary_dir, 'detector_pr.csv')
         print('Saving pr data to csv: ' + pr_csv)
         utils.save_dict_as_csv(pr, pr_csv)
+    
+    def calc_single_image_stats(self, predicted, ground_truth, threshold):
+        """ Calculates tp, fp, fn, and errors on single batch of boxes. 
+            Adapted from: https://gist.github.com/tarlen5/008809c3decf19313de216b9208f3734
+        """
+        if len(predicted) == 0:
+            tp = 0
+            fp = 0
+            fn = len(ground_truth)
+            return {'true_pos': tp, 'false_pos': fp, 'false_neg': fn, 
+                'ious': [], 'dxs': [], 'dys': [], 'dws': [], 'dhs': []}
+        if len(ground_truth) == 0:
+            tp = 0
+            fp = len(predicted)
+            fn = 0
+            return {'true_pos': tp, 'false_pos': fp, 'false_neg': fn, 
+                'ious': [], 'dxs': [], 'dys': [], 'dws': [], 'dhs': []}
+        
+        gt_idx_thr = []
+        pred_idx_thr = []
+        _ious = []
+        _dxs = []
+        _dys = []
+        _dws = []
+        _dhs = []
+
+        for ipb, pred_box in enumerate(predicted):
+            for igb, gt_box in enumerate(ground_truth):
+                iou = self.iou(pred_box[2], gt_box[1])
+                if iou > threshold and pred_box[0] == gt_box[0]:
+                    gt_idx_thr.append(igb)
+                    pred_idx_thr.append(ipb)
+                    _ious.append(iou)
+                    _dxs.append(pred_box[2][0] - gt_box[1][0])
+                    _dys.append(pred_box[2][1] - gt_box[1][1])
+                    _dws.append(pred_box[2][2] - gt_box[1][2])
+                    _dhs.append(pred_box[2][3] - gt_box[1][3])
+        
+        args_desc = np.argsort(_ious)[::-1] # get indices that sort ious
+        ious = []
+        dxs = []
+        dys = []
+        dws = []
+        dhs = []
+
+        if len(args_desc) == 0:
+            # no matches
+            tp = 0
+            fp = len(predicted)
+            fn = len(ground_truth)
+        else:
+            gt_match_idx = []
+            pred_match_idx = []
+            for idx in args_desc:
+                gt_idx = gt_idx_thr[idx]
+                pr_idx = pred_idx_thr[idx]
+                # if the boxes are unmatched, add them to matches
+                if (gt_idx not in gt_match_idx) and (pr_idx not in
+                    pred_match_idx):
+                    gt_match_idx.append(gt_idx)
+                    pred_match_idx.append(pr_idx)
+                    ious.append(_ious[idx])
+                    dxs.append(_dxs[idx])
+                    dys.append(_dys[idx])
+                    dws.append(_dws[idx])
+                    dhs.append(_dhs[idx])
+
+            tp = len(gt_match_idx)
+            fp = len(predicted) - len(pred_match_idx)
+            fn = len(ground_truth) - len(gt_match_idx)
+        
+        return {'true_pos': tp, 'false_pos': fp, 'false_neg': fn, 
+            'ious':ious, 'dxs': dxs, 'dys': dys, 'dws': dws, 'dhs': dhs}
 
     def update_statistics(self, predicted, ground_truth, thresholds):
         """ Updates confusion matrix and error statistics using predicted and
             ground truth values for image.
         """
-        # Predicted bbox classification
         for t, thresh in enumerate(thresholds):
             valid_pds = [pd for pd in predicted if pd[1] >= thresh]
-            for pd in valid_pds:
-                tp = False # Assume false positive until proven otherwise
-                for g in ground_truth:
-                    iou = self.iou(pd[2], g[1])
-                    if iou > self.overlap_criterion \
-                        and pd[0] == g[0]:
-                        tp = True
-                        self.iou_list[t].append(iou)
-                        self.dx_list[t].append(pd[2][0] - g[1][0])
-                        self.dy_list[t].append(pd[2][1] - g[1][1])
-                        self.dw_list[t].append(pd[2][2] - g[1][2])
-                        self.dh_list[t].append(pd[2][3] - g[1][3])
-                if tp:
-                    self.confusion[t][1, 1] += 1
-                else:
-                    self.confusion[t][0, 1] += 1
+            stats = self.calc_single_image_stats(valid_pds, ground_truth, 
+                self.overlap_criterion)
+            
+            self.confusion[t][1, 1] += stats['true_pos']
+            self.confusion[t][1, 0] += stats['false_neg']
+            self.confusion[t][0, 1] += stats['false_pos']
+            self.iou_list[t].extend(stats['ious'])
+            self.dx_list[t].extend(stats['dxs'])
+            self.dy_list[t].extend(stats['dys'])
+            self.dw_list[t].extend(stats['dws'])               
+            self.dh_list[t].extend(stats['dhs'])
+            
+            # tps = []
+            # tp_ious = []
+            # for g in ground_truth:
+            #     tp_idx = -1
+            #     tp_iou = 0
 
-            # Predicted gt classification
-            for g in ground_truth:
-                tp = False # Assume false negative until proven otherwise
-                for pd in valid_pds:
-                    if self.iou(pd[2], g[1]) > self.overlap_criterion \
-                        and pd[0] == g[0]:
-                        tp = True
-                if tp:
-                    continue # Already updated with predicted classification
-                else:
-                    self.confusion[t][1, 0] += 1
+            #     for i, pd in enumerate(valid_pds):
+            #         iou = self.iou(pd[2], g[1])
+            #         tp_idx = -1 # index of closest true positive
+            #         tp_iou = 0 # highest true positive iou
+                    
+            #         if iou > self.overlap_criterion and iou > tp_iou \
+            #             and pd[0] == g[0]:
+            #             tp_iou = iou
+            #             tp_idx = i
+
+            #     if tp_idx != -1: # true positive found - add to tp LIST instead...
+            #         tps.append(tp_idx)
+            #         tp_ious.append(tp_iou)
+            #         tp = valid_pds[tp_idx]
+            #         self.iou_list[t].append(tp_iou)
+            #         self.dx_list[t].append(tp[2][0] - g[1][0])
+            #         self.dy_list[t].append(tp[2][1] - g[1][1])
+            #         self.dw_list[t].append(tp[2][2] - g[1][2])                   
+            #         self.dh_list[t].append(tp[2][3] - g[1][3])
+            
+            # self.confusion[t][1, 1] += len(tps) # true positives
+            # self.confusion[t][1, 0] += len(ground_truth) - len(tps) # false negs
+            
+            # unique_tps = len(set(tps))
+            # self.confusion[t][0, 1] += len(valid_pds) - unique_tps# add remaining positives as fps
+
+        # Predicted bbox classification
+        # for t, thresh in enumerate(thresholds):
+        #     valid_pds = [pd for pd in predicted if pd[1] >= thresh]
+        #     for pd in valid_pds:
+        #         tp = False # Assume false positive until proven otherwise
+        #         for g in ground_truth:
+        #             iou = self.iou(pd[2], g[1])
+        #             if iou > self.overlap_criterion \
+        #                 and pd[0] == g[0]:
+        #                 tp = True
+        #                 self.iou_list[t].append(iou)
+        #                 self.dx_list[t].append(pd[2][0] - g[1][0])
+        #                 self.dy_list[t].append(pd[2][1] - g[1][1])
+        #                 self.dw_list[t].append(pd[2][2] - g[1][2])
+        #                 self.dh_list[t].append(pd[2][3] - g[1][3])
+        #         if tp:
+        #             self.confusion[t][1, 1] += 1
+        #         else:
+        #             self.confusion[t][0, 1] += 1
+
+        #     # Predicted gt classification
+        #     for g in ground_truth:
+        #         tp = False # Assume false negative until proven otherwise
+        #         for pd in valid_pds:
+        #             if self.iou(pd[2], g[1]) > self.overlap_criterion \
+        #                 and pd[0] == g[0]:
+        #                 tp = True
+        #         if tp:
+        #             continue # Already updated with predicted classification
+        #         else:
+        #             self.confusion[t][1, 0] += 1
 
 class AgentEvaluator(object):
     """ Object for evaluating policies. """
@@ -873,7 +995,9 @@ def main(args_dict):
     """ Runs tests specified by commandline args."""
     if args_dict['test'] == 'pr':
         print('Running detector precision recall test.')
-        detector_PR(output_dir=args_dict['output_dir'])
+        overlap_criteria =np.arange(0.10, 1.0, 0.10).tolist()
+        detector_PR(output_dir=args_dict['output_dir'], granularity=0.01,
+            overlap_criteria=overlap_criteria)
     elif args_dict['test'] == 'stats':
         print('Running detector performance test.')
         detector_performance(output_dir=args_dict['output_dir'])
