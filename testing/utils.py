@@ -1,7 +1,5 @@
 """ utils.py contains utilities for evaluating the different components
     of the harvester algorithm. 
-    
-    Last updated: 11/21/2018
 """
 import csv 
 import glob 

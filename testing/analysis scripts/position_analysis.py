@@ -1,9 +1,6 @@
 """
     position_analysis.py contains scripts for analyzing position data, as the
     name might imply.
-    
-    author: Jonathon Sather
-    last updated: 3/3/2019
 """
 
 import ast 
@@ -27,8 +24,6 @@ import agent.plant_ros as plant_ros
 import agent.agent_utils as agent_utils 
 import agent.agent_ros as agent_ros 
 
-import pdb 
-
 show_plant = True
 display_image = False 
 outdir = '/media/jonathon/JON SATHER/Thesis/results/fixation_obs'
@@ -45,18 +40,13 @@ class Camera(object):
         self.obs = full[...,::-1] # convert to bgr
         # self.obs = cv2.resize(full, (self.obs_shape[0], self.obs_shape[1]))
 
-
 def arm_over_existing(obs, hemi, name='plant'):
     """ Overlays image with arm over previously annotated hemi. """      
 
     hemi_gray = cv2.cvtColor(hemi, cv2.COLOR_BGR2GRAY)
-    # _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
-    #     cv2.THRESH_BINARY_INV)
     _, hemi_mask = cv2.threshold(hemi_gray, 1, 255, 
         cv2.THRESH_BINARY)
     hemi_mask_inv = 255 - hemi_mask 
-
-    # hemi_fg = cv2.bitwise_and(hemi, hemi, mask=hemi_mask) 
 
     obs_hsv = cv2.cvtColor(obs, cv2.COLOR_BGR2HSV)
     _, arm_mask = cv2.threshold(obs_hsv[:,:,1], 3, 255, cv2.THRESH_BINARY_INV)
@@ -70,7 +60,6 @@ def arm_over_existing(obs, hemi, name='plant'):
     existing_bg = cv2.bitwise_and(existing, existing, mask=arm_mask_inv)
     existing_fg_hemi = cv2.bitwise_and(existing_fg, existing_fg, mask=hemi_mask)
 
-    # arm_blend =  cv2.addWeighted(arm_fg, 0.6, existing_fg, 0.4, 0.0)
     arm_blend_hemi = cv2.addWeighted(arm_fg_hemi, 0.6, existing_fg_hemi, 0.4, 0.0)
     arm_blend = cv2.add(arm_blend_hemi, arm_fg_no_hemi) 
 
@@ -161,8 +150,6 @@ def create_overlay_image(coords, rewards, obs, radius, hemi, name='plant'):
     plot = cv2.imread('plot.png')            
 
     hemi_gray = cv2.cvtColor(hemi, cv2.COLOR_BGR2GRAY)
-    # _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
-    #     cv2.THRESH_BINARY_INV)
     _, hemi_mask = cv2.threshold(hemi_gray, 1, 255, 
         cv2.THRESH_BINARY)
     hemi_mask_inv = 255 - hemi_mask 
@@ -181,8 +168,6 @@ def create_overlay_image(coords, rewards, obs, radius, hemi, name='plant'):
     obs_hemi = cv2.add(hemi_blended, obs_bg) 
 
     plot_gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
-    # _, plot_mask = cv2.threshold(plot_gray, 254, 255, 
-    #     cv2.THRESH_BINARY_INV)
     _, plot_mask = cv2.threshold(plot_gray, 1, 255, 
         cv2.THRESH_BINARY)
     plot_mask_inv = 255 - plot_mask 

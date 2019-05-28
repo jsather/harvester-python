@@ -1,9 +1,6 @@
 """
     fixation_analysis.py contains scripts for analyzing fixation data, as the
     name might imply.
-    
-    author: Jonathon Sather
-    last updated: 1/24/2019
 """
 
 import ast 
@@ -26,8 +23,6 @@ import agent.config as agent_cfg
 import agent.plant_ros as plant_ros
 import agent.agent_utils as agent_utils 
 import agent.agent_ros as agent_ros 
-
-import pdb 
 
 show_plant = True
 display_image = False 
@@ -132,8 +127,6 @@ def create_overlay_image(coords, rewards, radius, hemi, obs=None, name='plant'):
     
     if obs is not None:
         hemi_gray = cv2.cvtColor(hemi, cv2.COLOR_BGR2GRAY)
-        # _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
-        #     cv2.THRESH_BINARY_INV)
         _, hemi_mask = cv2.threshold(hemi_gray, 1, 255, 
             cv2.THRESH_BINARY)
         hemi_mask_inv = 255 - hemi_mask 
@@ -146,8 +139,6 @@ def create_overlay_image(coords, rewards, radius, hemi, obs=None, name='plant'):
         obs_hemi = cv2.add(hemi_blended, obs_bg) 
 
         plot_gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
-        # _, plot_mask = cv2.threshold(plot_gray, 254, 255, 
-        #     cv2.THRESH_BINARY_INV)
         _, plot_mask = cv2.threshold(plot_gray, 1, 255, 
             cv2.THRESH_BINARY)
         plot_mask_inv = 255 - plot_mask 
@@ -216,14 +207,6 @@ def main():
     no_list = [219, 314, 336, 186, 93] #[3, 14, 227, 255, 269] 
 
     plant_list = ['model' + str(num) + '.sdf' for num in no_list]
-    # plant_list = ['model19.sdf', 'model84.sdf', 'model424.sdf',
-    #     'model161.sdf', 'model309.sdf','model347.sdf', 'model363.sdf',
-    #     'model49.sdf', 'model51.sdf', 'model107.sdf', 'model355.sdf', 
-    #     'model423.sdf']
-    # plant_list = ['model424.sdf',
-    #     'model51.sdf', 
-    #     'model423.sdf']
-    # plant_list = ['model84.sdf']
 
     while test_dirs:
         earliest = min(test_dirs, key=os.path.getctime)
@@ -252,13 +235,6 @@ def main():
                 coords.append(cart_coords)
         test_dirs.remove(earliest)
 
-    # plot coordinates? try it out!
-    # TODO: Figure out equivalent camera position
-    #       Figure out how to exit script without crashing
-    #       Figure out how to plot without noise
-    #       Figure out good plots to use and corresponding plants - display plant with plot in title!
-    #       Collect plant images from camera angle (autonomously?) and create cool images for report!
-    #       Figure out optimal camera angle
     if show_plant:
         sim = agent_utils.HarvesterSimulation()
         sim.cfg['paused'] = False 
@@ -268,24 +244,6 @@ def main():
         camera = Camera()
         plant = plant_ros.PlantROS()
 
-    # create and save hemi backdrop image
-    # x_sph, y_sph, z_sph = create_hemisphere(radius=agent_cfg.hemi_radius)
-
-    # fig = plt.figure(figsize=(8,8), dpi=100)
-    # ax = Axes3D(fig) 
-    # ax.set_xlim3d(-agent_cfg.hemi_radius, agent_cfg.hemi_radius)
-    # ax.set_ylim3d(-agent_cfg.hemi_radius, agent_cfg.hemi_radius)
-    # ax.set_zlim3d(-0.2*(2*agent_cfg.hemi_radius), 0.8*(2*agent_cfg.hemi_radius))
-
-    # ax.view_init(azim=225)
-    # ax.set_axis_off() 
-    # ax.plot_surface(x_sph, y_sph, z_sph, rstride=1, cstride=1, 
-    #     color='c', alpha=0.3, linewidth=0)
-
-    # plt.savefig('hemi.png', transparent=True)
-    # plt.close(fig)
-    # time.sleep(1)
-    # hemi = cv2.imread('hemi.png')
     hemi = create_hemi_image(radius=agent_cfg.hemi_radius)
     
     for plant_no in range(len(coords)):
@@ -303,114 +261,6 @@ def main():
             create_overlay_image(coords=coords[plant_no], rewards=rewards[plant_no], radius=agent_cfg.hemi_radius, hemi=hemi, obs=obs, name=plant_name)
     
     os.kill(os.getpid(), signal.SIGTERM)
-
-    # for plant_no in range(len(coords)):
-    # while True:
-    #     plant_no = 0
-    #     plant_name = file_from_path(plant_files[plant_no])
-    #     if plant_name in plant_list:
-    #         if show_plant:
-    #             # spawn plant and take image
-    #             plant.new(sdf=plant_files[plant_no])
-    #             time.sleep(30)
-    #             show_plant = False 
-
-    #         x_pos = [] 
-    #         y_pos = [] 
-    #         z_pos = [] 
-
-    #         x_neu = [] 
-    #         y_neu = [] 
-    #         z_neu = [] 
-
-    #         x_term = [] 
-    #         y_term = [] 
-    #         z_term = [] 
-
-    #         x = [] 
-    #         y = [] 
-    #         z = [] 
-
-    #         for idx, coord in enumerate(coords[plant_no]):
-    #             if rewards[plant_no][idx] == 1.0:
-    #                 x_pos.append(coord[0])
-    #                 y_pos.append(coord[1])
-    #                 z_pos.append(coord[2])
-    #             elif rewards[plant_no][idx] == -0.1:
-    #                 x_neu.append(coord[0])
-    #                 y_neu.append(coord[1])
-    #                 z_neu.append(coord[2])
-    #             else:
-    #                 x_term.append(coord[0])
-    #                 y_term.append(coord[1])
-    #                 z_term.append(coord[2])
-
-    #             x.append(coord[0])
-    #             y.append(coord[1])
-    #             z.append(coord[2])
-            
-    #         # plot points
-    #         fig = plt.figure(figsize=(8,8), dpi=100)
-    #         #ax.plot(x, y, zs=z, c='y')#, c='b', marker='o')
-    #         ax = Axes3D(fig) 
-    #         ax.set_xlim3d(-agent_cfg.hemi_radius, agent_cfg.hemi_radius)
-    #         ax.set_ylim3d(-agent_cfg.hemi_radius, agent_cfg.hemi_radius)
-    #         ax.set_zlim3d(-0.2*(2*agent_cfg.hemi_radius), 0.8*(2*agent_cfg.hemi_radius))
-
-    #         ax.scatter(x_pos, y_pos, z_pos, c='b', marker='*')
-    #         ax.scatter(x_neu, y_neu, z_neu, c='y', marker='o')
-    #         ax.scatter(x_term, y_term, z_term, c='r', marker='o')
-    #         ax.view_init(azim=225)
-    #         ax.set_axis_off() # uncomment when aligned!\
-
-    #         plt.savefig('plot.png', transparent=True)
-    #         plt.close(fig)
-    #         time.sleep(1)
-    #         plot = cv2.imread('plot.png')            
-            
-    #         if show_plant:
-    #             obs = camera.obs 
-
-    #             hemi_gray = cv2.cvtColor(hemi, cv2.COLOR_BGR2GRAY)
-    #             _, hemi_mask = cv2.threshold(hemi_gray, 254, 255, 
-    #                 cv2.THRESH_BINARY_INV)
-    #             hemi_mask_inv = 255 - hemi_mask 
-
-    #             hemi_fg = cv2.bitwise_and(hemi, hemi, mask=hemi_mask) 
-    #             obs_fg = cv2.bitwise_and(obs, obs, mask=hemi_mask)
-    #             obs_bg = cv2.bitwise_and(obs, obs, mask=hemi_mask_inv)
-
-    #             hemi_blended = cv2.addWeighted(hemi_fg, 0.3, obs_fg, 0.7, 0.0)
-    #             obs_hemi = cv2.add(hemi_blended, obs_bg) 
-
-    #             plot_gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
-    #             _, plot_mask = cv2.threshold(plot_gray, 254, 255, 
-    #                 cv2.THRESH_BINARY_INV)
-    #             plot_mask_inv = 255 - plot_mask 
-             
-    #             plot_fg = cv2.bitwise_and(plot, plot, mask=plot_mask)
-    #             obs_hemi_bg = cv2.bitwise_and(obs_hemi, obs_hemi, 
-    #                 mask=plot_mask_inv) 
-    #             overlay = cv2.add(plot_fg, obs_hemi_bg)
-
-    #             cv2.imwrite(plant_name[:-4] + '_plant' + '.png', overlay)
-    #         else:
-    #             plot_gray = cv2.cvtColor(plot, cv2.COLOR_BGR2GRAY)
-    #             # _, plot_mask = cv2.threshold(plot_gray, 1, 255,
-    #             #     cv2.THRESH_BINARY)
-    #             _, plot_mask = cv2.threshold(plot_gray, 254, 255,
-    #                 cv2.THRESH_BINARY_INV)
-    #             plot_mask_inv = 255 - plot_mask 
-
-    #             plot_fg = cv2.bitwise_and(plot, plot, mask=plot_mask)
-    #             hemi_bg = cv2.bitwise_and(hemi, hemi, mask=plot_mask_inv)
-    #             overlay = cv2.add(plot_fg, hemi_bg)
-
-    #             cv2.imwrite(plant_name[:-4] + '_hemi' + '.png', overlay)
-            
-    #         if display_image:
-    #             cv2.imshow(plant_name, overlay)
-    #             cv2.waitKey(5000)
 
 if __name__ == "__main__":
     main()
