@@ -11,8 +11,14 @@ git clone https://github.com/jsather/harvester-python.git
 export PYTHONPATH=~/git/harvester-python:$PYTHONPATH
 ```
 
+Then run `setup.py` to build the detector cython modules (adapted from [Darkflow](https://github.com/thtrieu/darkflow)).
+```
+cd ~/git/harvester-python
+python setup.py build_ext --inplace
+```
+
 ## Components
-There are several submodules that work together for different components of the project. They work together as follows:
+There are five submodules that work together for different components of the project. They work together as follows:
 
 ![dataflow](https://imgur.com/s62ti61.jpg)
 
@@ -31,3 +37,4 @@ This project is licensed under the BSD 2-CLAUSE LICENSE- see the [LICENSE.md](LI
 
 ## Acknowledgments
 * agent interface inspired by [GPS](http://rll.berkeley.edu/gps/) and [OpenAI Gym](https://gym.openai.com/)
+* detector post processing adapted from [Darkflow](https://github.com/thtrieu/darkflow)  
