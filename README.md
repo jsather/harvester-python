@@ -31,3 +31,4 @@ This project is licensed under the BSD 2-CLAUSE LICENSE- see the [LICENSE.md](LI
 
 ## Acknowledgments
 * agent interface inspired by [GPS](http://rll.berkeley.edu/gps/) and [OpenAI Gym](https://gym.openai.com/)
+* detector post processing adapted from [Darkflow](https://github.com/thtrieu/darkflow)  
