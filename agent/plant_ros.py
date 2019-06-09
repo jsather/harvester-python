@@ -1,9 +1,6 @@
 """ plant_ros.py contains interface to talk to simulated strawberry plant in
     Gazebo/ROS.
 
-    Author: Jonathon Sather
-    Last updated: 9/10/2018
-
     Note: Having difficulties using subprocess.Popen([arg1, arg2, etc...]), 
         so sending direct command 'arg1 arg2 arg3' with shell=True. 
         Not ideal, but it works for now.
@@ -20,7 +17,6 @@ import rospy
 from gazebo_msgs.srv import DeleteModel
 
 import config as agent_cfg
-
 
 class PlantROS:
     """ Class for interfacting with strawberry plant through ROS/Gazebo.

@@ -1,9 +1,6 @@
 """ train.py contains the Watchdog class, which is responsible for starting 
     the training and ensuring continuous operation. Running this script as main 
     starts the training process.
-    
-    Author: Jonathon Sather
-    Last updated: 10/09/2018
 """
 import argparse 
 import datetime
@@ -26,8 +23,12 @@ def get_named_pids(name):
         running = psutil.pids() 
 
     for p in running: 
-        if psutil.Process(p).name() == name: 
-            named.append(p)
+        try:
+            if psutil.Process(p).name() == name: 
+                named.append(p)
+        except TypeError:
+            if psutil.Process(p).name == name:
+                named.append(p)
     
     return named
 

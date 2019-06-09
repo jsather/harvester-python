@@ -1,5 +1,6 @@
-""" config.py contains the configuration options for the ddpg subpackage.
+""" Configuration options for the ddpg module.
 """
+
 # Learning parameters
 buffer_size = 100000
 batch_size = 16
@@ -15,19 +16,25 @@ save_freq = 100
 # Files and directories
 weights_file = ''
 vars_file = ''
-logfile = '' #'/mnt/storage/logs/ddpg.log' 
-results_dir = '/mnt/storage/results'
-buffer_dir = '/mnt/storage/buffer'
+logfile = ''  # '/mnt/storage/logs/ddpg.log' 
+results_dir = '/home/jonathon/storage/results' # '/mnt/storage/results'
+buffer_dir = '/home/jonathon/storage/buffer' # '/mnt/storage/buffer'
 
 # Other
-headless = True
+headless = False
 
-# GPU options
-tf_cfg = {
-    'allow_soft_placement': True,
-    'log_device_placement': False}
-device = '/GPU:0'
+# GPU config
+# device = '/GPU:0'
+# gpu_usage = 0.8
 
+# CPU config
+device = ''
+gpu_usage = 0.
+
+# tf_cfg = {
+#     'allow_soft_placement': True,
+#     'log_device_placement': False}
+    
 # Embedding network
 hidden_1_size_embedding = 400
 hidden_2_size_embedding = 300
@@ -47,4 +54,3 @@ kernel_size_per_layer = [3, 3, 3, 3, 3]
 hidden_1_size_conv = 200
 hidden_2_size_conv = 200
 out_init_mag_conv = 3e-4
-

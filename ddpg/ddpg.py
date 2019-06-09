@@ -89,6 +89,23 @@ def get_latest(weights_dir):
         dir_contents.remove(latest)
     return '', ''
 
+def get_tf_cfg():
+    """ Returns tf config based on specified options in config file. """
+    tf_cfg = {'allow_soft_placement': False,
+              'log_device_placement': False}
+    
+    if ddpg_cfg.gpu_usage > 0:
+        tf_cfg['gpu_options'] = tf.GPUOptions(
+            per_process_gpu_memory_fraction=ddpg_cfg.gpu_usage)
+        tf_cfg['allow_soft_placement'] = True 
+    else:
+        tf_cfg['device_count'] = {'GPU': 0}
+        
+    config = tf.ConfigProto(**tf_cfg)
+    config.gpu_options.allow_growth = True 
+
+    return config 
+
 def update_cfg(args):
     """ Updates values in global configuration to match current configuration.
     """
@@ -631,9 +648,9 @@ def main():
 
     update_cfg(args_dict)
     set_logfile()
-    config = tf.ConfigProto(**ddpg_cfg.tf_cfg)
-    config.gpu_options.allow_growth = True
-    with tf.Session(config=config) as session:
+    tf_cfg = get_tf_cfg()
+
+    with tf.Session(config=tf_cfg) as session:
         np.random.seed(ddpg_cfg.np_seed)
         tf.set_random_seed(ddpg_cfg.tf_seed)
 

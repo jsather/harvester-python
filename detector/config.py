@@ -14,8 +14,8 @@ labels = module_dir + 'network/labels.txt' # needed?
 device = ''
 gpu_usage = 0.0 
 
-threshold = 0.5 # needed?
+# threshold = 0.5 # needed?
 
-tf_cfg = {
-    'allow_soft_placement': True,
-    'log_device_placement': False}
+# tf_cfg = {
+#     'allow_soft_placement': True,
+#     'log_device_placement': False}

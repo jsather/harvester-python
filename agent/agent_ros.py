@@ -5,9 +5,6 @@
     Structure inspired by:
     https://github.com/cbfinn/gps/tree/master/python/gps/agent/ros
 
-    Author: Jonathon Sather
-    Last updated: 4/02/2019
-
     TODO: Continue pruning code and adding documentation!
 """ 
 import copy
@@ -30,14 +27,10 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 
+import image.image_ros as image_ros
 import utils as agent_utils 
 import config as agent_cfg
 import plant_ros
-
-try:
-    import image.image_ros as image_ros
-except ImportError as e:
-    print('Unable to import RewardROS: ', e)
 
 class AgentROS(object):
     """ Agent superclass for interfacting with harvesting robot through
@@ -519,7 +512,7 @@ class HemiAgentROS(AgentROS):
             self._start_feed()
 
         if detector:
-            self.detector_feedback = image.RewardROS(tf_session=tf_session)
+            self.detector_feedback = image_ros.RewardROS(tf_session=tf_session)
 
     def _start_feed(self, verbose=True):
         """ Starts feed process. """

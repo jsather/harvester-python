@@ -10,8 +10,8 @@ import numpy as np
 
 # Useful directories
 pwd = os.path.split(os.path.abspath(__file__))[0]
-catkin_ws = '/home/jonathon/catkin_ws'  #'/root/catkin_ws' 
-storage = '/mnt/storage'#
+catkin_ws = '/home/jonathon/catkin_ws'  # '/root/catkin_ws' 
+storage = '/home/jonathon/storage' # '/mnt/storage'
 
 # General
 model_name = 'j2s6s200'
@@ -19,6 +19,7 @@ num_joints = 6
 num_fingers = 2
 finger_names = ['j2s6s200_joint_finger_1', 'j2s6s200_joint_finger_2']
 joint_angles_init = np.array([-1.47, 3.00, 3.00, -0.09, 1.87, -2.23]) #np.array([-1.47, 3.00, 4.82, -0.09, 1.87, -2.23]) 
+joint_limits = np.array([
     [-np.pi, np.pi],
     [30.0/180.0*np.pi, 330.0/180.0*np.pi],
     [30.0/180.0*np.pi, 330.0/180.0*np.pi],
@@ -92,7 +93,7 @@ sigma = 0.0075 # original 0.3 (for 40x larger action bound)
 theta = 0.15
 
 # Other
-plant_model_dir = os.path.join(catkin_ws, 'src', 'harvester-ros', 
+plant_model_dir = os.path.join(catkin_ws, 'src', 'harvester-sim', 
     'harvester_gazebo', 'models', 'random_strawberry_plant')
 feed_startup_script = os.path.join(pwd, '..', 'image', 'show_feed.py')
 logfile = '' #os.path.join(storage, 'logs', 'agent.log')

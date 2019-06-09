@@ -1,9 +1,6 @@
 """ networks.py contains the classes for defining the actor and critic networks
     used in the DDPG algorithm. This version does not contain recurrence units.
 
-    Author: Jonathon Sather
-    Last updated: 9/26/2018
-
     Uses most parameters from original DDPG paper:
     'Continuous Control in Deep Reinforcement Learning' by Lillicrap, et al.
     (arXiv:1509.02971)
@@ -11,7 +8,7 @@
     Modular structure influence by:
     https://github.com/pemami4911/deep-rl/tree/master/ddpg
 """
-import darkflow.net.build as build 
+
 import numpy as np
 import tensorflow as tf
 
@@ -173,30 +170,34 @@ class EmbeddingNetwork(object):
     """ Defines the embedding network which takes in a camera image and outputs
         a low-dimensional embedding which can be used as input to the actor
         or critic networks.
+        NOTE: Not implemented yet!
     """
 
-    def __init__(self, session):
+    def __init__(self, session=None):
         """ Initialize the embedding network using Darkflow to port the Darknet
             model to Tensorflow.
         """
-        self.session = session
+        raise NotImplementedError('Embedding class not implemented') 
+        # self.session = session
         
-        with tf.device(ddpg_cfg.device):
-            self.net = build.TFNet(detect_cfg.df_options) 
-            self.input = self.net.inp 
-            self.output = self.net.out 
-            self.params = tf.trainable_variables()
+        # with tf.device(ddpg_cfg.device):
+        #     self.net = build.TFNet(detect_cfg.df_options) 
+        #     self.input = self.net.inp 
+        #     self.output = self.net.out 
+        #     self.params = tf.trainable_variables()
 
     def preprocess(self, input):
         """ Preprocesses input image(s) to be ready for embedding. """
-        return self.net.framework.preprocess(input)
+        raise NotImplementedError('Embedding class not implemented') 
+        # self.net.framework.preprocess(input)
 
     def create_feed(self, inputs):
         """ Preprocesses input image(s) to be ready for embedding. Expects a
             list of inputs.
         """
-        feed = map(lambda x: np.expand_dims(self.preprocess(x), 0), inputs)
-        return np.concatenate(feed, 0)
+        raise NotImplementedError('Embedding class not implemented') 
+        # feed = map(lambda x: np.expand_dims(self.preprocess(x), 0), inputs)
+        # return np.concatenate(feed, 0)
 
     def embed(self, input):
         """ Embed image by running through network. This method is primarily
@@ -207,15 +208,17 @@ class EmbeddingNetwork(object):
             returns:
                 embedded: Numpy array of embedded images
         """
-        processed = self.create_feed(input)
-        embedded = self.session.run(self.output_flattened,
-            feed_dict={self.input: processed})
-        return embedded
+        raise NotImplementedError('Embedding class not implemented') 
+        # processed = self.create_feed(input)
+        # embedded = self.session.run(self.output_flattened,
+        #     feed_dict={self.input: processed})
+        # return embedded
 
     def get_num_variables(self):
         """ Returns number of parameters associated with embedding network.
         """
-        return len(self.params)
+        raise NotImplementedError('Embedding class not implemented')  
+        # return len(self.params)
 
 class ActorNetwork(object):
     """ Defines the actor network (Q-network optimizer) used in the DDPG
