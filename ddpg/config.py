@@ -30,10 +30,6 @@ headless = False
 # CPU config
 device = ''
 gpu_usage = 0.
-
-# tf_cfg = {
-#     'allow_soft_placement': True,
-#     'log_device_placement': False}
     
 # Embedding network
 hidden_1_size_embedding = 400
