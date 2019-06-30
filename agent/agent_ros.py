@@ -1,4 +1,4 @@
-""" 
+"""
     agent_ros.py contains interface to talk to the harvester arm in
     Gazebo/ROS.
 
@@ -6,14 +6,14 @@
     https://github.com/cbfinn/gps/tree/master/python/gps/agent/ros
 
     TODO: Continue pruning code and adding documentation!
-""" 
+"""
 import copy
 import os
-import signal 
+import signal
 import sys
 import time
 
-import cv2 
+import cv2
 import geometry_msgs.msg
 import moveit_commander
 import moveit_msgs.msg
@@ -28,7 +28,7 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 
 import image.image_ros as image_ros
-import utils as agent_utils 
+import utils as agent_utils
 import config as agent_cfg
 import plant_ros
 
@@ -71,8 +71,8 @@ class AgentROS(object):
         self.episode_count = 0
         self.trajectory_fraction = 0
         self.last_return = None
-        
-        # Start simulation 
+
+        # Start simulation
         rospy.init_node('harvester_agent_ros_node')
         self._start_gazebo(headless=headless)
         self.plant = plant_ros.PlantROS()
@@ -81,13 +81,16 @@ class AgentROS(object):
         self._init_controllers()
         self._init_pubs_and_subs()
         self._init_moveit()
-   
+
     def _init_controller_names(self):
         """ Initializes joint/finger names and trajectory controller names. """
         self.joint_names = []
+        self.link_names  = []
         for i in range(self.num_joints):
-            name = self.model_name + '_joint_' + str(i+1)
-            self.joint_names.append(name)
+            joint_name = self.model_name + '_joint_' + str(i+1)
+            link_name = self.model_name + '_link_' + str(i+1)
+            self.joint_names.append(joint_name)
+            self.link_names.append(link_name)
 
         self.finger_names = []
         for i in range(self.num_fingers):
@@ -184,6 +187,7 @@ class AgentROS(object):
         self.moveit_gripper_group = moveit_commander.MoveGroupCommander(
             'gripper')
         self.moveit_ik = agent_utils.GetIK(group='arm', verbose=False)
+        self.moveit_fk = agent_utils.GetFK(link_names=[self.link_names[-1]])
         self.moveit_config = Client('/move_group/trajectory_execution')
         self.moveit_config.update_configuration({'allowed_start_tolerance':0.0})
 
@@ -275,7 +279,8 @@ class AgentROS(object):
 
     def get_ee_pose(self):
         """ Returns current end effector pose. """
-        return self.moveit_arm_group.get_current_pose()
+        #return self.moveit_arm_group.get_current_pose()
+        return self.get_fk(self.joint_angles).pose_stamped[0]
 
     def get_camera_pose(self):
         """ Returns current camera pose. """
@@ -293,6 +298,17 @@ class AgentROS(object):
         camera_pose.pose.position.y += rel_offset[1]
         camera_pose.pose.position.z += rel_offset[2]
         return camera_pose
+
+    def get_fk(self, angles):
+        """ Computes Moveit's /compute_ik service to get inverse kinematics for
+            robot arm.
+        """
+        robot_state = moveit_msgs.msg.RobotState()
+        robot_state.joint_state.name = self.joint_names
+        robot_state.joint_state.position = angles
+        robot_state.joint_state.header.frame_id = self.moveit_robot.get_planning_frame()
+
+        return self.moveit_fk.get_fk(robot_state)
 
     def get_ik(self, pose, seed_angles=None, ik_attempts=0,
         avoid_collisions=True):
@@ -486,12 +502,12 @@ class HemiAgentROS(AgentROS):
         manifold above the strawberry plant.
     """
 
-    def __init__(self, headless=False, feed=False, detector=True, 
+    def __init__(self, headless=False, feed=False, detector=True,
         tf_session=None):
         """ Initializes ROS/Gazebo agent. """
         super(HemiAgentROS, self).__init__(headless=headless)
 
-        signal.signal(signal.SIGINT, self.exit_gracefully) 
+        signal.signal(signal.SIGINT, self.exit_gracefully)
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
         self.lut = agent_cfg.hemi_lut
@@ -505,8 +521,8 @@ class HemiAgentROS(AgentROS):
         self.reset_angles = agent_cfg.hemi_reset_angles # rad
         self.action_bound = agent_cfg.hemi_action_bound
         self.action_penalty = agent_cfg.hemi_action_penalty
-        
-        self.reset(random=False, verbose=True, new_episode=True) 
+
+        self.reset(random=False, verbose=True, new_episode=True)
 
         if feed:
             self._start_feed()
@@ -526,7 +542,7 @@ class HemiAgentROS(AgentROS):
         if verbose:
             print("Done.")
             sys.stdout.flush()
-    
+
     def _stop_feed(self):
         """ Stops feed process. """
         try:
@@ -548,7 +564,7 @@ class HemiAgentROS(AgentROS):
             valid = self.lut_mask[theta_idx, phi_idx]
 
         return self.lut[theta_idx, phi_idx], valid
-    
+
     def _angles_to_pose(self, theta, phi):
         """ Converts [theta, phi, rho] position along hemisphere into Pose
             object in world frame.
@@ -587,7 +603,7 @@ class HemiAgentROS(AgentROS):
         pose.orientation = orientation
 
         return pose
-    
+
     def _pose_to_angles(self, pose):
         """ Returns theta, phi angles corresponding to given pose. """
         theta = np.arctan2(pose.position.y, pose.position.x)
@@ -599,7 +615,7 @@ class HemiAgentROS(AgentROS):
     def _clamp_phi(self, phi):
         """ Method for clamping phi inside operating range. """
         return max(min(self.phi_max, phi), self.phi_min)
-    
+
     def check_joint_error(self, tol=None):
         """ Raises exception if maximum joint error is not within specified
            margin.
@@ -609,13 +625,14 @@ class HemiAgentROS(AgentROS):
 
         joint_error = self.max_joint_error()
         if joint_error > tol:
-            raise RuntimeError('Joint error of ' + str(joint_error) + 
-                ' above threshold of ' + str(tol) + 
+            raise RuntimeError('Joint error of ' + str(joint_error) +
+                ' above threshold of ' + str(tol) +
                 ' Something is likely very, very wrong.')
 
     def exit_gracefully(self, sig, frame):
         """ Kill spawned processes when program terminated. """
         print('Signal: ' + str(sig) + '. Killing agent and related processes.')
+        moveit_commander.roscpp_shutdown()
         self._stop_feed()
         self._stop_gazebo()
         sys.exit()
@@ -641,20 +658,20 @@ class HemiAgentROS(AgentROS):
         """ Returns last state. """
         return [self.obs, self.get_cur_angles()]
 
-    def get_reward(self, action, in_bounds):
+    def get_reward(self, obs, action, in_bounds):
         """ Returns reward at current state. """
         if not in_bounds:
             reward = -self.invalid_goal_penalty
-        elif self.detector_feedback.get_reward() > self.reward_threshold:
+        elif self.detector_feedback.get_reward(obs) > self.reward_threshold:
             reward = self.detection_reward
         else:
             reward = -self.existence_penalty
 
         return reward
-    
+
     def get_last_return(self):
         """ Returns last return stored in memberdata. """
-        return self.last_return 
+        return self.last_return
 
     def max_joint_error(self):
         """ Gives distance in hemi-space to last commanded target. """
@@ -663,7 +680,7 @@ class HemiAgentROS(AgentROS):
         target = np.array(self.moveit_arm_group.get_joint_value_target())
         target = target % (2*np.pi)
 
-        errors = current - target 
+        errors = current - target
         errors_adjusted = [min(abs(x), 2*np.pi - abs(x)) for x in errors]
 
         return np.linalg.norm(errors_adjusted, np.inf)
@@ -677,7 +694,7 @@ class HemiAgentROS(AgentROS):
 
         if phi is None:
             phi = copy.copy(cur_phi)
-        
+
         self.latest_commanded_angles = (theta, phi)
 
         joint_angles, valid = self._angles_to_joints(theta, phi)
@@ -686,7 +703,7 @@ class HemiAgentROS(AgentROS):
             fraction = 0.0
         else:
             fraction = self.execute_joint_trajectory(joint_angles, wait=wait)
-        
+
         return {'fraction': fraction, 'valid': valid}
 
     def move_to_angles_hemi(self, theta=None, phi=None, max_plan=5,
@@ -753,12 +770,12 @@ class HemiAgentROS(AgentROS):
 
     def move_to_angles(self, theta=None, phi=None, max_plan=5,
         execute_partial_plan=False, along_hemi=False, wait=True):
-        """ Moves to specified joint angles on hemisphere. Returns dictionary 
+        """ Moves to specified joint angles on hemisphere. Returns dictionary
             with trajectory information.
         """
         if along_hemi: # NOTE: No "wait" option here (yet (maybe))
             return self.move_to_angles_hemi(theta=theta, phi=phi, max_plan=max_plan,
-                execute_partial_plan=False) 
+                execute_partial_plan=False)
         else:
             return self.move_to_angles_lut(theta=theta, phi=phi, wait=wait)
 
@@ -787,28 +804,28 @@ class HemiAgentROS(AgentROS):
             return False
         return True
 
-    def reset(self, random=False, new_episode=True, along_hemi=False, 
-        verbose=False, safe_mode=False, kill_on_fail=False, 
+    def reset(self, random=False, new_episode=True, along_hemi=False,
+        verbose=False, safe_mode=False, kill_on_fail=False,
         plant_file=None):
-        """ Resets harvesting arm to starting position. 
+        """ Resets harvesting arm to starting position.
             TODO: Add documentation for args...
         """
         if verbose:
             print("Resetting arm... ")
             sys.stdout.flush()
-        
+
         if new_episode:
             self.episode_count += 1
             self.start_episode()
             self._publish_step(None)
 
-            if (not self.plant.is_spawned() or 
+            if (not self.plant.is_spawned() or
                 self.episode_count % self.plant_interval == 0):
 
-                if verbose: 
+                if verbose:
                     print('Spawning new plant...')
                     sys.stdout.flush()
-                
+
                 if plant_file is not None:
                     self.plant.new(plant_model_prefix=plant_file)
                 else:
@@ -824,39 +841,39 @@ class HemiAgentROS(AgentROS):
             if safe_mode:
                 self.move_to_angles(phi=0.05, along_hemi=False)
                 time.sleep(1)
-            fraction = self.move_to_random() 
+            fraction = self.move_to_random()
         else:
             ret = self.move_to_angles(theta=self.reset_angles[0],
                 phi=self.reset_angles[1], along_hemi=along_hemi)
             fraction = ret['fraction']
-        
+
         if fraction == 0.0:
             print("Reset failure!")
             print("Fraction: " + str(fraction))
             if kill_on_fail:
                 raise RuntimeError('Could not plan reset trajectory')
-        
+
         if verbose:
             print("Done.")
             sys.stdout.flush()
 
         return self.get_state()
-    
+
     def take_action(self, angle_inc):
         """ Take action with arm. Returns status info dictionary. """
         if type(angle_inc) == np.ndarray:
             angle_inc = angle_inc.reshape((2,)).tolist()
-        
-        [cur_theta, cur_phi] = self.get_cur_angles() 
+
+        [cur_theta, cur_phi] = self.get_cur_angles()
         theta = cur_theta + angle_inc[0]
         phi = cur_phi + angle_inc[1]
 
-        self._publish_step(angle_inc) 
+        self._publish_step(angle_inc)
         info = self.move_to_angles(theta=theta, phi=phi, along_hemi=False)
         self.step_count += 1
         self._publish_step_count()
 
-        return info 
+        return info
 
     def step(self, angle_inc, verbose=True):
         """ Take action with arm and get updated observations.
@@ -864,15 +881,17 @@ class HemiAgentROS(AgentROS):
             http://gym.openai.com/docs/
         """
         start = time.time()
-        #self.check_joint_error()    
-        
-        info = self.take_action(angle_inc) 
+        #self.check_joint_error()
+
+        info = self.take_action(angle_inc)
         [obs, pos] = self.get_state()
-        reward = self.get_reward(action=angle_inc, in_bounds=info['valid'])
+        reward = self.get_reward(obs=obs,
+                                 action=angle_inc,
+                                 in_bounds=info['valid'])
 
         done = not info['valid'] or self.episode_finished()
-        info['elapsed'] = time.time() - start 
-        
+        info['elapsed'] = time.time() - start
+
         if verbose:
             print('| Step: {:d}/{:d} | Episode: {:d} | Reward: {:2f}'.format(
                 self.step_count, self.max_episode_steps, self.episode_count,

@@ -1,6 +1,4 @@
 """ Configuration options for displaying camera feedback.
-    Author: Jonathon Sather
-    Last updated: 9/23/18
 """
 import os
 import numpy as np

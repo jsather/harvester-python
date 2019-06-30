@@ -11,14 +11,9 @@ if os.name =='nt' :
             sources=["detector/cython_utils/nms.pyx"],
             #libraries=["m"] # Unix-like specific
             include_dirs=[numpy.get_include()]
-        ),        
+        ),
         Extension("detector.cython_utils.cy_yolo2_findboxes",
             sources=["detector/cython_utils/cy_yolo2_findboxes.pyx"],
-            #libraries=["m"] # Unix-like specific
-            include_dirs=[numpy.get_include()]
-        ),
-        Extension("detector.cython_utils.cy_yolo_findboxes",
-            sources=["detector/cython_utils/cy_yolo_findboxes.pyx"],
             #libraries=["m"] # Unix-like specific
             include_dirs=[numpy.get_include()]
         )
@@ -30,14 +25,9 @@ elif os.name =='posix' :
             sources=["detector/cython_utils/nms.pyx"],
             libraries=["m"], # Unix-like specific
             include_dirs=[numpy.get_include()]
-        ),        
+        ),
         Extension("detector.cython_utils.cy_yolo2_findboxes",
             sources=["detector/cython_utils/cy_yolo2_findboxes.pyx"],
-            libraries=["m"], # Unix-like specific
-            include_dirs=[numpy.get_include()]
-        ),
-        Extension("detector.cython_utils.cy_yolo_findboxes",
-            sources=["detector/cython_utils/cy_yolo_findboxes.pyx"],
             libraries=["m"], # Unix-like specific
             include_dirs=[numpy.get_include()]
         )
@@ -48,13 +38,9 @@ else :
         Extension("detector.cython_utils.nms",
             sources=["detector/cython_utils/nms.pyx"],
             libraries=["m"] # Unix-like specific
-        ),        
+        ),
         Extension("detector.cython_utils.cy_yolo2_findboxes",
             sources=["detector/cython_utils/cy_yolo2_findboxes.pyx"],
-            libraries=["m"] # Unix-like specific
-        ),
-        Extension("detector.cython_utils.cy_yolo_findboxes",
-            sources=["detector/cython_utils/cy_yolo_findboxes.pyx"],
             libraries=["m"] # Unix-like specific
         )
     ]

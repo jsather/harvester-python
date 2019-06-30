@@ -7,20 +7,20 @@
 import os
 import psutil
 import shlex
-import signal 
+import signal
 import subprocess
-import sys 
-import time 
+import sys
+import time
 
 import numpy as np
 import rospy
 import rospkg
-from gazebo_msgs.srv import SetModelConfiguration 
+from gazebo_msgs.srv import SetModelConfiguration
 from std_srvs.srv import Empty
-from controller_manager_msgs.srv import SwitchController 
-from moveit_msgs.srv import GetPositionIK
-from moveit_msgs.srv import GetPositionIKRequest
-from moveit_msgs.srv import GetPositionIKResponse
+from controller_manager_msgs.srv import SwitchController
+from moveit_msgs.srv import GetPositionIK, GetPositionFK
+from moveit_msgs.srv import GetPositionIKRequest, GetPositionFKRequest
+from moveit_msgs.srv import GetPositionIKResponse, GetPositionFKResponse
 
 import config as agent_cfg
 
@@ -58,7 +58,7 @@ def roslaunch(package, launchfile, args):
     rospack = rospkg.RosPack()
     launch_path = os.path.join(rospack.get_path(package), 'launch', launchfile)
     # cmd = 'nohup roslaunch ' + launch_path
-    cmd = 'roslaunch ' + launch_path 
+    cmd = 'roslaunch ' + launch_path
 
     for key, value in args.iteritems():
         cmd += ' ' + key + ':=' + str(value)
@@ -77,29 +77,29 @@ class HarvesterSimulation(object):
             raise Exception(
                 "Roscore instance already created, only allowed one instance.")
         HarvesterSimulation.__initialized = True
-        
+
         self.harvester_project = agent_cfg.harvester_ros_path
-        self.cfg = agent_cfg.harvester_default_cfg 
+        self.cfg = agent_cfg.harvester_default_cfg
         self.joints = agent_cfg.joint_names # TODO: Add to cfg
         self.joint_angles_init = agent_cfg.joint_angles_init.tolist() # TODO: Add to cfg
         self.running_processes = []
 
         self.launch_world_delay = agent_cfg.launch_world_delay
         self.load_robot_delay = agent_cfg.load_robot_delay
-        self.spawn_controllers_delay = agent_cfg.spawn_controllers_delay 
-        self.spawn_robot_delay = agent_cfg.spawn_robot_delay 
-        self.move_home_delay = agent_cfg.move_home_delay 
-        self.launch_moveit_delay = agent_cfg.launch_moveit_delay 
+        self.spawn_controllers_delay = agent_cfg.spawn_controllers_delay
+        self.spawn_robot_delay = agent_cfg.spawn_robot_delay
+        self.move_home_delay = agent_cfg.move_home_delay
+        self.launch_moveit_delay = agent_cfg.launch_moveit_delay
 
     def run(self, headless=False, verbose=True, world_only=False):
         """ Start the ROS/Gazebo harvester simulation. """
         if headless:
-            self.cfg['gui'] = False 
-        
+            self.cfg['gui'] = False
+
         if verbose:
-            print("Starting harvester simulation with configuration: " + 
+            print("Starting harvester simulation with configuration: " +
                 str(self.cfg))
-        
+
         self.launch_world(verbose=verbose)
         if world_only:
             return
@@ -107,64 +107,64 @@ class HarvesterSimulation(object):
         self.spawn_robot(verbose=verbose) # moved robot load into spawn file
         self.spawn_controllers(verbose=verbose)
         self.set_robot_config(verbose=verbose)
-        self.unpause_physics(verbose=verbose) 
-        # self.start_controllers(verbose=verbose) 
+        self.unpause_physics(verbose=verbose)
+        # self.start_controllers(verbose=verbose)
         self.move_home(verbose=verbose)
         self.launch_moveit(verbose=verbose)
 
     def launch_world(self, verbose=True):
         """ Launches harvester world. """
-        if verbose: 
+        if verbose:
             print("Launching world")
-        
-        process = roslaunch('harvester_gazebo', 'harvester_world.launch', self.cfg) 
-        self.running_processes.append(process) 
+
+        process = roslaunch('harvester_gazebo', 'harvester_world.launch', self.cfg)
+        self.running_processes.append(process)
         rospy.sleep(self.launch_world_delay)
-    
+
     def spawn_controllers(self, verbose=True):
         """ Spawns (stopped) controllers. """
-        if verbose: 
+        if verbose:
             print("Spawning controllers")
 
         control_args = {'harvester_robotName': self.cfg['harvester_robotName'],
             'kinova_robotName': self.cfg['kinova_robotName'],
             'stopped': False}
         process = roslaunch('harvester_control', 'harvester_control.launch',
-            control_args) 
+            control_args)
         self.running_processes.append(process)
         rospy.sleep(self.spawn_controllers_delay)
-    
+
     def spawn_robot(self, verbose=True):
         """ Spawns robot. """
         if verbose:
             print("Spawning robot")
-        
+
         spawn_args = {'harvester_robotName': self.cfg['harvester_robotName'],
             'kinova_robotName': self.cfg['kinova_robotName']}
-        process = roslaunch('harvester_gazebo', 'spawn_robot.launch', 
+        process = roslaunch('harvester_gazebo', 'spawn_robot.launch',
             spawn_args)
         self.running_processes.append(process)
         rospy.sleep(self.spawn_robot_delay)
-    
+
     def move_home(self, verbose=True):
         """ Runs script to home robot. """
         if verbose:
             print("Moving home")
-        
+
         home_args = {'kinova_robotName': self.cfg['kinova_robotName']}
-        process = roslaunch('harvester_control', 'move_home.launch', home_args) 
-        self.running_processes.append(process) 
+        process = roslaunch('harvester_control', 'move_home.launch', home_args)
+        self.running_processes.append(process)
         rospy.sleep(self.move_home_delay)
-    
+
     def launch_moveit(self, verbose=True):
         """ Launches moveit. """
         if verbose:
             print("Launching Moveit")
-        
+
         moveit_args = {}
         process = roslaunch('harvester_moveit', 'harvester_moveit.launch',
             moveit_args)
-        self.running_processes.append(process) 
+        self.running_processes.append(process)
         rospy.sleep(self.launch_moveit_delay)
 
     def set_robot_config(self, verbose=True):
@@ -175,9 +175,9 @@ class HarvesterSimulation(object):
         config_srv = '/gazebo/set_model_configuration'
         rospy.wait_for_service(config_srv)
         set_config = rospy.ServiceProxy(config_srv, SetModelConfiguration)
-        ret = set_config(self.cfg['kinova_robotName'], '', self.joints, 
-            self.joint_angles_init) #[0,2.9,1.3,4.2,1.4,0.0]) 
-        print(ret) 
+        ret = set_config(self.cfg['kinova_robotName'], '', self.joints,
+            self.joint_angles_init) #[0,2.9,1.3,4.2,1.4,0.0])
+        print(ret)
 
     def start_controllers(self, verbose=True):
         """ Starts controllers for specified model. Assumes that the controllers
@@ -185,18 +185,18 @@ class HarvesterSimulation(object):
         """
         if verbose:
             print("Starting controllers.")
-        
+
         controllers = [
-            'joint_state_controller', 
-            'effort_joint_trajectory_controller', 
+            'joint_state_controller',
+            'effort_joint_trajectory_controller',
             'effort_finger_trajectory_controller']
-        
+
         switch_srv = os.path.join('/' + self.cfg['kinova_robotName'],
-            'controller_manager', 
+            'controller_manager',
             'switch_controller')
         rospy.wait_for_service(switch_srv)
         switch_controller = rospy.ServiceProxy(switch_srv, SwitchController)
-        ret = switch_controller(controllers, [], 2) 
+        ret = switch_controller(controllers, [], 2)
         print(ret) # TODO: Get rid of this and add while loop!
 
     def unpause_physics(self, verbose=True):
@@ -212,15 +212,15 @@ class HarvesterSimulation(object):
         if not self.running_processes:
             print('Simulation not running, cannot kill process.')
             return
-        
+
         print('Killing ' + str(len(self.running_processes)) + ' processes')
-        for process in self.running_processes: 
+        for process in self.running_processes:
             kill_child_processes(process.pid)
-            process.terminate() 
-            process.wait() 
-        
+            process.terminate()
+            process.wait()
+
         self.running_processes = []
-        HarvesterSimulation.__initialized = False 
+        HarvesterSimulation.__initialized = False
 
 class Feed(object):
     """ Class for launching and stopping annotated camera feed. Inspired by:
@@ -235,7 +235,7 @@ class Feed(object):
                 "Feed already created, only allowed one instance.")
         Feed.__initialized = True
 
-        self.delay = agent_cfg.init_feed_delay 
+        self.delay = agent_cfg.init_feed_delay
 
     def run(self):
         """ Start the feed. """
@@ -262,6 +262,48 @@ class Feed(object):
         self.feed_process.terminate()
         self.feed_process.wait() # Apparently prevents "zombie process"
         Feed.__initialized = False
+
+class GetFK(object):
+    """ Class for creating FK calls in Moveit.
+        Basically created by Sammy Pfeiffer (I just changed inverse to forward)
+        Source: https://github.com/uts-magic-lab/moveit_python_tools/blob/master/src/moveit_python_tools/get_ik.py
+    """
+    def __init__(self, link_names, verbose=False):
+        """
+        """
+        if verbose:
+            rospy.loginfo("Initalizing GetFK...")
+        self.link_names = link_names
+        self.fk_srv = rospy.ServiceProxy('/compute_fk',
+                                         GetPositionFK)
+        if verbose:
+            rospy.loginfo("Waiting for /compute_fk service...")
+        self.fk_srv.wait_for_service()
+
+        if verbose:
+            rospy.loginfo("Connected!")
+
+    def get_fk(self, robot_state, link_names=None):
+        """
+        Do an FK call to pose_stamped pose.
+        """
+
+        req = GetPositionFKRequest()
+
+        if link_names is None:
+            req.fk_link_names = self.link_names
+        else:
+            req.fk_link_names = link_names
+        req.robot_state = robot_state
+
+        try:
+            resp = self.fk_srv.call(req)
+            return resp
+        except rospy.ServiceException as e:
+            rospy.logerr("Service exception: " + str(e))
+            resp = GetPositionFKResponse()
+            resp.error_code = 99999  # Failure
+        return resp
 
 class GetIK(object):
     """ Class for creating IK calls in Moveit.

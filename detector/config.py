@@ -1,10 +1,19 @@
 """ Configuration file for strawberry detector. """
+import os
 
-module_dir = '/home/jonathon/_git/harvester-python/detector/'
-pb = module_dir + 'network/yolov2-tiny-strawb.pb'
-meta = module_dir + 'network/yolov2-tiny-strawb.meta'
-cfg = module_dir + 'network/yolov2-tiny-strawb.cfg' # needed?
-labels = module_dir + 'network/labels.txt' # needed?
+try:
+    harvester_python = [pp for pp in os.environ['PYTHONPATH'].split(":")
+                        if 'harvester-python' in pp][0]
+except IndexError as e:
+    raise IndexError(
+        'Could not find harvester-python workspace.' +
+        ' Did you remember to update your PYTHONPATH?')
+        
+network = os.path.join(harvester_python, 'detector', 'network')
+pb = os.path.join(network, 'yolov2-tiny-strawb.pb')
+meta = os.path.join(network, 'yolov2-tiny-strawb.meta')
+cfg = os.path.join(network, 'yolov2-tiny-strawb.cfg') # needed?
+labels = os.path.join(network, 'labels.txt') # needed?
 
 # GPU config
 # device = '/GPU:0'
@@ -12,7 +21,7 @@ labels = module_dir + 'network/labels.txt' # needed?
 
 # CPU config
 device = ''
-gpu_usage = 0.0 
+gpu_usage = 0.0
 
 # threshold = 0.5 # needed?
 

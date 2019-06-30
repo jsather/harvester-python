@@ -5,9 +5,9 @@
 import collections
 import time
 
-import cv2 
-import numpy as np 
-import rospy 
+import cv2
+import numpy as np
+import rospy
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
@@ -44,7 +44,7 @@ class FeedROS(object):
         self.reward_loc = None
         self.image_shape = image_cfg.image_shape
         self.reward_threshold = agent_cfg.reward_threshold
-        self.detection_reward = agent_cfg.detection_reward 
+        self.detection_reward = agent_cfg.detection_reward
 
         self.line_type = image_cfg.line_type
         self.bb_colors = image_cfg.bb_colors
@@ -144,14 +144,14 @@ class FeedROS(object):
 
     def bb_to_reward(self, bbs):
         """ Converts list of bounding boxes to detection reward value. """
-        reward = 0.0 
+        reward = 0.0
         max_confidence = 0.0
         location = (-self.image_shape[0], -self.image_shape[1])
         for bb in bbs:
             if bb[0] and (bb[1] > max(self.reward_threshold, max_confidence)):
                 max_confidence = bb[1]
                 location = (bb[2][0], bb[2][1])
-                reward = self.detection_reward 
+                reward = self.detection_reward
         return reward, location
 
     def draw_frame(self, im, bbs, action=None, display_action=True):
@@ -259,7 +259,7 @@ class FeedROS(object):
 
                 latency = time.time() - start
                 from_end = min(int(latency*self.fps) + 1, len(self.obs))
-                
+
                 self.draw_frame(
                     self.obs[-from_end],
                     bbs,
@@ -295,12 +295,15 @@ class RewardROS(object):
 
         return max_confidence
 
-    def get_reward(self):
-        """ Processes latest frame and returns detection component of reward.
+    def get_reward(self, obs=None):
+        """ Processes observation and returns detection component of reward.
+            If no observation given, processes latest frame.
         """
+        if obs is None:
+            obs = self.obs
 
         try:
-            bbs = self.detector.detect(self.obs)
+            bbs = self.detector.detect(obs)
         except Exception as e:
             print('Error retrieving bounding boxes')
             print(e)
