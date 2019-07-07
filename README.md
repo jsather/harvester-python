@@ -26,7 +26,8 @@ python setup.py build_ext --inplace
 ## Components
 There are five submodules that work together for different components of the project. They work together as follows:
 
-![dataflow](https://imgur.com/s62ti61.jpg)
+<img src="https://imgur.com/s62ti61.jpg" width="600">
+
 
 * `agent`: primary interface between ROS/Gazebo and python. 
 
@@ -46,7 +47,8 @@ python train.py
 ```
 
 If not running headless, you should see a window titled "harvester vision" showing the agent's current viewpoint, action, and reward.
-![harvester-vision](https://imgur.com/8AkRTUm.jpg)
+
+<img src="https://imgur.com/8AkRTUm.jpg" width="450">
 
 For running individual components or testing, refer to the relevant submodule's README. 
 
