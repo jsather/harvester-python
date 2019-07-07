@@ -1,6 +1,12 @@
 """ Configuration options for the ddpg module.
 """
+import imp
 import os
+import sys
+
+project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+global_config = imp.load_source('config',
+    os.path.join(project_dir, 'config.py'))
 
 # Learning parameters
 buffer_size = 100000
@@ -15,7 +21,6 @@ max_episode_len = 1000
 save_freq = 100
 
 # Files and directories
-
 try:
     harvester_python = [pp for pp in os.environ['PYTHONPATH'].split(":")
                         if 'harvester-python' in pp][0]
@@ -27,18 +32,17 @@ weights_file = ''
 vars_file = ''
 logfile = ''  # '/mnt/storage/logs/ddpg.log'
 results_dir = os.path.join(harvester_python, 'storage', 'results')
-buffer_dir = os.path.join(harvester_python, 'storage', 'buffer')) # '/mnt/storage/buffer'
+buffer_dir = os.path.join(harvester_python, 'storage', 'buffer') # '/mnt/storage/buffer'
 
 # Other
 headless = False
 
-# GPU config
-# device = '/GPU:0'
-# gpu_usage = 0.8
-
-# CPU config
-device = ''
-gpu_usage = 0.
+if global_config.gpu:
+    device = '/GPU:0'
+    gpu_usage = 0.8
+else:
+    device = ''
+    gpu_usage = 0.0
 
 # Embedding network
 hidden_1_size_embedding = 400

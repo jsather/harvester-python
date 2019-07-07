@@ -102,3 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Storage
+storage/buffer/*
+storage/results/*

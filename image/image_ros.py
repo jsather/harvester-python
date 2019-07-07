@@ -301,6 +301,8 @@ class RewardROS(object):
         """
         if obs is None:
             obs = self.obs
+        else:
+            obs = cv2.cvtColor(obs, cv2.COLOR_RGB2BGR)
 
         try:
             bbs = self.detector.detect(obs)
