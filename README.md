@@ -32,6 +32,15 @@ There are five submodules that work together for different components of the pro
 
 * `testing`: utilities and scripts for evaluating the learned agent and detector's performance.
 
+## Usage
+Train the agent by running `train.py` from the main directory:
+```
+cd ~/git/harvester-python
+python train.py
+```
+
+For running individual components or testing, refer to the relevant submodule's README. 
+
 ## License
 This project is licensed under the BSD 2-CLAUSE LICENSE- see the [LICENSE.md](LICENSE.md) file for details
 
