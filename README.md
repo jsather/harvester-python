@@ -40,17 +40,19 @@ There are five submodules that work together for different components of the pro
 * `testing`: utilities and scripts for evaluating the learned agent and detector's performance.
 
 ## Usage
+### Training
 Train the agent by running `train.py`:
 ```
 cd ~/git/harvester-python
 python train.py
 ```
 
-If not running headless, you should see a window titled "harvester vision" showing the agent's current viewpoint, action, and reward.
+You should see a window titled "harvester vision" showing the agent's current viewpoint:
 
 <img src="https://imgur.com/8AkRTUm.jpg" width="450">
 
-For running individual components or testing, refer to the relevant submodule's README. 
+### Other
+For running individual components or testing, refer to the documentation for the relevant submodule. 
 
 ## License
 This project is licensed under the BSD 2-CLAUSE LICENSE- see the [LICENSE.md](LICENSE.md) file for details
