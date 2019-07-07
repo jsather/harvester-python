@@ -3,6 +3,12 @@
 
 Python 2 interface for the [harvester-sim](https://github.com/jsather/harvester-sim) environment. Contains utilities for real-time strawberry detection and [viewpoint optimization with deep reinforcement learning](https://arxiv.org/abs/1903.02074).
 
+
+## Dependencies
+* [tensorflow](https://www.tensorflow.org/)
+* [open-cv](https://pypi.org/project/opencv-python/)
+* [harvester-sim](https://github.com/jsather/harvester-sim)
+
 ## Installation
 Clone the repo, and add it to your python path.
 ```
@@ -33,7 +39,7 @@ There are five submodules that work together for different components of the pro
 * `testing`: utilities and scripts for evaluating the learned agent and detector's performance.
 
 ## Usage
-Train the agent by running `train.py` from the main directory:
+Train the agent by running `train.py`:
 ```
 cd ~/git/harvester-python
 python train.py
