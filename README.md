@@ -5,9 +5,9 @@ Python 2 interface for the [harvester-sim](https://github.com/jsather/harvester-
 
 
 ## Dependencies
+* [harvester-sim](https://github.com/jsather/harvester-sim)
 * [tensorflow](https://www.tensorflow.org/)
 * [open-cv](https://pypi.org/project/opencv-python/)
-* [harvester-sim](https://github.com/jsather/harvester-sim)
 
 ## Installation
 Clone the repo, and add it to your python path.
@@ -44,6 +44,9 @@ Train the agent by running `train.py`:
 cd ~/git/harvester-python
 python train.py
 ```
+
+If not running headless, you should see a window titled "harvester vision" showing the agent's current viewpoint, action, and reward.
+![harvester-vision](https://imgur.com/8AkRTUm.jpg)
 
 For running individual components or testing, refer to the relevant submodule's README. 
 
