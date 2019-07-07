@@ -1,7 +1,7 @@
 # harvester-python
 ![harvester-gif](https://imgur.com/0dghLur.gif)
 
-Python 2 interface for the [harvester-sim](https://github.com/jsather/harvester-sim) environment. Contains utilities for real-time strawberry detection and [viewpoint optimization with deep reinforcement learning](https://arxiv.org/abs/1903.02074).
+Python 2 interface for the [harvester-sim](https://github.com/jsather/harvester-sim) environment. Contains utilities for real-time strawberry detection and viewpoint optimization with deep reinforcement learning. Originally used by Jonathon Sather in his research on autonomous strawberry harvesting. ([paper](https://arxiv.org/abs/1903.02074)) ([video summary](https://youtu.be/C6hrCVv2B-o))
 
 
 ## Dependencies
