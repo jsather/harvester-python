@@ -21,18 +21,11 @@ max_episode_len = 1000
 save_freq = 100
 
 # Files and directories
-try:
-    harvester_python = [pp for pp in os.environ['PYTHONPATH'].split(":")
-                        if 'harvester-python' in pp][0]
-except IndexError as e:
-    raise IndexError(
-        'Could not find harvester-python workspace.' +
-        ' Did you remember to update your PYTHONPATH?')
 weights_file = ''
 vars_file = ''
-logfile = ''  # '/mnt/storage/logs/ddpg.log'
-results_dir = os.path.join(harvester_python, 'storage', 'results')
-buffer_dir = os.path.join(harvester_python, 'storage', 'buffer') # '/mnt/storage/buffer'
+logfile = ''
+results_dir = os.path.join(global_config.storage_dir, 'results')
+buffer_dir = os.path.join(global_config.storage_dir, 'storage', 'buffer')
 
 # Other
 headless = False

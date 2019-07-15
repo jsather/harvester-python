@@ -1,26 +1,15 @@
 """ agent_config.py contains configuration options for AgentROS and PlantROS
     classes.
 """
+import imp
 import os
 import pickle
 
 import numpy as np
 
-# Useful directories
-try:
-    catkin_ws = [ws for ws in os.environ['ROS_PACKAGE_PATH'].split(":")
-                 if 'src' in ws][0]
-except IndexError as e:
-    raise IndexError(
-        'Could not find catkin_ws. Have you sourced your environment?')
-
-try:
-    harvester_python = [pp for pp in os.environ['PYTHONPATH'].split(":")
-                        if 'harvester-python' in pp][0]
-except IndexError as e:
-    raise IndexError(
-        'Could not find harvester-python workspace.' +
-        ' Did you remember to update your PYTHONPATH?')
+project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+global_config = imp.load_source('config',
+    os.path.join(project_dir, 'config.py'))
 
 # General
 model_name = 'j2s6s200'
@@ -60,7 +49,7 @@ plant_interval = 1
 reward_threshold = 0.6
 
 # Hemi stuff
-with open(os.path.join(harvester_python, 'agent', 'lut')) as f:
+with open(os.path.join(global_config.harvester_python, 'agent', 'lut')) as f:
     joints_data = pickle.load(f)
 hemi_lut = joints_data['lut']
 hemi_lut_thetas = joints_data['thetas']
@@ -75,7 +64,8 @@ hemi_action_penalty = 0.0 # 0.25
 hemi_state_shape = [obs_shape, hemi_action_bound.shape]
 
 # ROS launch
-harvester_ros_path = os.path.join(catkin_ws, 'src', 'harvester-ros')
+harvester_ros_path = os.path.join(global_config.catkin_ws, 'src',
+    'harvester-ros')
 harvester_default_cfg = {
     'harvester_robotName': 'harvester1',
     'kinova_robotName': model_name,
@@ -102,7 +92,8 @@ sigma = 0.0075 # original 0.3 (for 40x larger action bound)
 theta = 0.15
 
 # Other
-plant_model_dir = os.path.join(catkin_ws, 'harvester-sim',
+plant_model_dir = os.path.join(global_config.catkin_ws, 'harvester-sim',
     'harvester_gazebo', 'models', 'random_strawberry_plant')
-feed_startup_script = os.path.join(harvester_python, 'image', 'show_feed.py')
-logfile = '' #os.path.join(storage, 'logs', 'agent.log')
+feed_startup_script = os.path.join(global_config.harvester_python, 'image',
+    'show_feed.py')
+logfile = ''
