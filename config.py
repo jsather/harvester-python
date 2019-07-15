@@ -1,4 +1,5 @@
 """ Global config file for harvester-python. """
+import os
 
 # Useful directories
 try:
